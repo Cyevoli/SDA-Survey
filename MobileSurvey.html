@@ -691,7 +691,7 @@ function resetSetup() {
 function signIn() {
   if (!clientId) { show('setupScreen'); return; }
   const redirectUri = encodeURIComponent(window.location.href.split('#')[0]);
-  const url = https://www.google.com/search?q=https://login.microsoftonline.com/r2ut.com/oauth2/v2.0/authorize%3Fclient_id%3D${clientId}&response_type=token&redirect_uri=${redirectUri}&scope=${encodeURIComponent(SCOPES)}&response_mode=fragment;
+  const url = `https://login.microsoftonline.com/r2ut.com/oauth2/v2.0/authorize?client_id=${clientId}&response_type=token&redirect_uri=${encodeURIComponent(window.location.href.split('#')[0])}&scope=${encodeURIComponent(SCOPES)}&response_mode=fragment`;
   window.location.href = url;
 }
 
