@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SDA Survey">
+<title>SDA Site Readiness</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.15);
+    --text: #f0f2ff;
+    --muted: #8b90a8;
+    --accent: #4f8ef7;
+    --accent2: #3a6fd8;
+    --green: #22c55e;
+    --green-bg: rgba(34,197,94,0.12);
+    --amber: #f59e0b;
+    --amber-bg: rgba(245,158,11,0.12);
+    --red: #ef4444;
+    --red-bg: rgba(239,68,68,0.12);
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html { background: var(--bg); }
+  body { font-family: -apple-system, 'SF Pro Text', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 40px; }
+
+  /* SETUP SCREEN */
+  #setupScreen { display: flex; flex-direction: column; min-height: 100vh; padding: 24px 20px; }
+  .setup-logo { width: 48px; height: 48px; background: var(--accent); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; }
+  .setup-logo svg { width: 26px; height: 26px; fill: white; }
+  .setup-title { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 6px; }
+  .setup-sub { font-size: 14px; color: var(--muted); line-height: 1.5; margin-bottom: 32px; }
+  .setup-step { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; }
+  .setup-step-num { font-size: 11px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px; }
+  .setup-step-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .setup-step-desc { font-size: 13px; color: var(--muted); line-height: 1.5; }
+  .setup-step-desc a { color: var(--accent); text-decoration: none; }
+  .setup-input-wrap { margin-top: 10px; }
+  .setup-input-wrap label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 4px; }
+  .setup-input { width: 100%; background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 14px; color: var(--text); font-family: 'SF Mono', monospace; }
+  .setup-input::placeholder { color: var(--muted); }
+  .btn-primary { width: 100%; padding: 14px; background: var(--accent); color: white; border: none; border-radius: var(--radius); font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 8px; letter-spacing: -0.2px; }
+  .btn-primary:active { background: var(--accent2); transform: scale(0.98); }
+  .btn-secondary { width: 100%; padding: 12px; background: transparent; color: var(--accent); border: 1px solid var(--accent); border-radius: var(--radius); font-size: 14px; font-weight: 500; cursor: pointer; margin-top: 8px; }
+  .setup-note { font-size: 12px; color: var(--muted); text-align: center; margin-top: 16px; line-height: 1.6; }
+
+  /* AUTH SCREEN */
+  #authScreen { display: none; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; text-align: center; }
+  .auth-icon { width: 64px; height: 64px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
+  .auth-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+  .auth-sub { font-size: 14px; color: var(--muted); margin-bottom: 32px; line-height: 1.6; max-width: 300px; }
+  .ms-btn { display: flex; align-items: center; gap: 10px; background: white; color: #333; border: none; border-radius: var(--radius); padding: 13px 20px; font-size: 15px; font-weight: 600; cursor: pointer; width: 100%; max-width: 320px; justify-content: center; }
+  .ms-btn:active { transform: scale(0.98); }
+  .ms-logo { width: 20px; height: 20px; flex-shrink: 0; }
+  #authStatus { font-size: 13px; color: var(--muted); margin-top: 16px; }
+
+  /* NOTEBOOK PICKER */
+  #notebookScreen { display: none; flex-direction: column; padding: 24px 20px; min-height: 100vh; }
+  .nb-title { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+  .nb-sub { font-size: 14px; color: var(--muted); margin-bottom: 24px; }
+  .nb-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+  .nb-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; }
+  .nb-item.selected { border-color: var(--accent); background: rgba(79,142,247,0.08); }
+  .nb-item-name { font-size: 15px; font-weight: 500; }
+  .nb-item-check { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--border2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .nb-item.selected .nb-item-check { background: var(--accent); border-color: var(--accent); }
+  .nb-item.selected .nb-item-check::after { content: '✓'; font-size: 11px; color: white; font-weight: 700; }
+  .nb-section-pick { margin-top: 16px; }
+  .nb-section-pick label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 6px; }
+  .nb-section-input { width: 100%; background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 14px; color: var(--text); }
+  .nb-section-input::placeholder { color: var(--muted); }
+
+  /* MAIN FORM */
+  #formScreen { display: none; flex-direction: column; }
+  .topbar { position: sticky; top: 0; z-index: 100; background: rgba(15,17,23,0.95); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
+  .topbar-left { display: flex; flex-direction: column; }
+  .topbar-title { font-size: 14px; font-weight: 700; }
+  .topbar-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .topbar-right { display: flex; align-items: center; gap: 8px; }
+  .user-dot { width: 30px; height: 30px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: white; }
+  .progress-bar { height: 2px; background: var(--surface2); }
+  .progress-fill { height: 2px; background: var(--accent); transition: width 0.3s ease; }
+
+  .form-body { padding: 16px; }
+  .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .field { margin-bottom: 0; }
+  .field label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 4px; }
+  .field input[type=text], .field input[type=number], .field textarea, .field select {
+    width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 9px 11px; font-size: 14px; color: var(--text); font-family: inherit; -webkit-appearance: none;
+  }
+  .field input:focus, .field textarea:focus { outline: none; border-color: var(--accent); }
+  .field textarea { resize: vertical; min-height: 52px; }
+
+  /* SECTIONS */
+  .section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 10px; overflow: hidden; }
+  .sec-head { display: flex; align-items: center; justify-content: space-between; padding: 13px 14px; cursor: pointer; user-select: none; }
+  .sec-head-left { display: flex; align-items: center; gap: 10px; }
+  .sec-num { width: 22px; height: 22px; border-radius: 6px; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--muted); flex-shrink: 0; }
+  .sec-title { font-size: 14px; font-weight: 600; }
+  .sec-badge { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px; letter-spacing: 0.3px; }
+  .sec-badge.ready { background: var(--green-bg); color: var(--green); }
+  .sec-badge.blockers { background: var(--amber-bg); color: var(--amber); }
+  .sec-badge.notready { background: var(--red-bg); color: var(--red); }
+  .sec-badge.pending { background: var(--surface2); color: var(--muted); }
+  .chevron { font-size: 10px; color: var(--muted); transition: transform 0.2s; }
+  .chevron.open { transform: rotate(180deg); }
+
+  .sec-body { display: none; padding: 0 14px 14px; border-top: 1px solid var(--border); }
+  .sec-body.open { display: block; }
+  .sec-body .field { margin-bottom: 10px; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  /* YN + TOGGLE BUTTONS */
+  .btn-group { display: flex; flex-wrap: wrap; gap: 6px; }
+  .yn-btn, .tog-btn {
+    font-size: 13px; padding: 7px 14px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border2); background: var(--surface2); color: var(--muted);
+    cursor: pointer; font-family: inherit; transition: all 0.15s;
+  }
+  .yn-btn.y { background: var(--green-bg); color: var(--green); border-color: rgba(34,197,94,0.3); }
+  .yn-btn.n { background: var(--red-bg); color: var(--red); border-color: rgba(239,68,68,0.3); }
+  .tog-btn.on { background: rgba(79,142,247,0.15); color: var(--accent); border-color: rgba(79,142,247,0.4); }
+
+  /* STATUS BUTTONS */
+  .status-strip { display: flex; gap: 6px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .st-btn { flex: 1; padding: 8px 4px; text-align: center; font-size: 11px; font-weight: 600; border-radius: var(--radius-sm); border: 1px solid var(--border2); background: var(--surface2); color: var(--muted); cursor: pointer; letter-spacing: 0.2px; }
+  .st-btn.ready { background: var(--green-bg); color: var(--green); border-color: rgba(34,197,94,0.3); }
+  .st-btn.blockers { background: var(--amber-bg); color: var(--amber); border-color: rgba(245,158,11,0.3); }
+  .st-btn.notready { background: var(--red-bg); color: var(--red); border-color: rgba(239,68,68,0.3); }
+
+  /* SUBMIT */
+  .submit-wrap { padding: 0 16px 16px; }
+  .submit-btn { width: 100%; padding: 16px; background: var(--accent); color: white; border: none; border-radius: var(--radius); font-size: 16px; font-weight: 700; cursor: pointer; letter-spacing: -0.3px; }
+  .submit-btn:active { background: var(--accent2); transform: scale(0.98); }
+  .submit-btn:disabled { background: var(--surface2); color: var(--muted); }
+  .submit-status { font-size: 13px; color: var(--muted); text-align: center; margin-top: 10px; min-height: 18px; }
+  .submit-status.success { color: var(--green); }
+  .submit-status.error { color: var(--red); }
+
+  /* OVERALL STATUS */
+  .overall-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin: 0 16px 10px; }
+  .overall-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .overall-strip { display: flex; gap: 6px; }
+  .ov-btn { flex: 1; padding: 9px 4px; text-align: center; font-size: 11px; font-weight: 600; border-radius: var(--radius-sm); border: 1px solid var(--border2); background: var(--surface2); color: var(--muted); cursor: pointer; }
+  .ov-btn.ready { background: var(--green-bg); color: var(--green); border-color: rgba(34,197,94,0.3); }
+  .ov-btn.blockers { background: var(--amber-bg); color: var(--amber); border-color: rgba(245,158,11,0.3); }
+  .ov-btn.notready { background: var(--red-bg); color: var(--red); border-color: rgba(239,68,68,0.3); }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--surface); border: 1px solid var(--border2); border-radius: var(--radius); padding: 12px 20px; font-size: 14px; font-weight: 500; color: var(--text); transition: transform 0.3s ease; z-index: 999; white-space: nowrap; }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.success { border-color: rgba(34,197,94,0.4); color: var(--green); }
+  .toast.error { border-color: rgba(239,68,68,0.4); color: var(--red); }
+
+  /* Loading spinner */
+  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- SETUP SCREEN -->
+<div id="setupScreen">
+  <div class="setup-logo">
+    <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+  </div>
+  <div class="setup-title">SDA Site Readiness</div>
+  <div class="setup-sub">One-time setup to connect this form to your Microsoft account and OneNote.</div>
+
+  <div class="setup-step">
+    <div class="setup-step-num">Step 1 — Azure App Registration</div>
+    <div class="setup-step-title">Get your Client ID</div>
+    <div class="setup-step-desc">
+      1. Go to <a href="https://portal.azure.com" target="_blank">portal.azure.com</a> and sign in<br>
+      2. Search "App registrations" → New registration<br>
+      3. Name it "SDA Survey" — leave defaults<br>
+      4. Under "Authentication" → Add platform → Single-page app<br>
+      5. Redirect URI: <strong>the URL of this file</strong> (or file:// if opened locally)<br>
+      6. Copy the <strong>Application (client) ID</strong> from the Overview page
+    </div>
+    <div class="setup-input-wrap">
+      <label>Application (Client) ID</label>
+      <input class="setup-input" id="clientIdInput" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" autocomplete="off" spellcheck="false">
+    </div>
+  </div>
+
+  <div class="setup-step">
+    <div class="setup-step-num">Step 2 — API Permissions (in Azure)</div>
+    <div class="setup-step-title">Add OneNote permissions</div>
+    <div class="setup-step-desc">
+      In your app registration → API permissions → Add permission → Microsoft Graph → Delegated:<br>
+      <strong>Notes.Create</strong> and <strong>Notes.ReadWrite</strong>
+      <br><br>Then click "Grant admin consent" if available, or your IT admin can do this.
+    </div>
+  </div>
+
+  <button class="btn-primary" onclick="saveSetup()">Save & Connect Microsoft Account</button>
+  <p class="setup-note">Your Client ID is saved locally on this device only. Nothing is sent anywhere until you submit a form.</p>
+</div>
+
+<!-- AUTH SCREEN -->
+<div id="authScreen">
+  <div class="auth-icon">
+    <svg width="28" height="28" viewBox="0 0 23 23" fill="none">
+      <rect x="1" y="1" width="10" height="10" fill="#F25022"/>
+      <rect x="12" y="1" width="10" height="10" fill="#7FBA00"/>
+      <rect x="1" y="12" width="10" height="10" fill="#00A4EF"/>
+      <rect x="12" y="12" width="10" height="10" fill="#FFB900"/>
+    </svg>
+  </div>
+  <div class="auth-title">Sign in to Microsoft</div>
+  <div class="auth-sub">Sign in with your work Microsoft account to allow this form to create pages in your OneNote.</div>
+  <button class="ms-btn" onclick="signIn()">
+    <svg class="ms-logo" viewBox="0 0 23 23" fill="none">
+      <rect x="1" y="1" width="10" height="10" fill="#F25022"/>
+      <rect x="12" y="1" width="10" height="10" fill="#7FBA00"/>
+      <rect x="1" y="12" width="10" height="10" fill="#00A4EF"/>
+      <rect x="12" y="12" width="10" height="10" fill="#FFB900"/>
+    </svg>
+    Sign in with Microsoft
+  </button>
+  <div id="authStatus"></div>
+  <button class="btn-secondary" style="max-width:320px;margin-top:20px" onclick="resetSetup()">← Back to setup</button>
+</div>
+
+<!-- NOTEBOOK PICKER -->
+<div id="notebookScreen">
+  <div class="nb-title">Choose a Notebook</div>
+  <div class="nb-sub">Select the OneNote notebook where site surveys will be saved.</div>
+  <div class="nb-list" id="notebookList">
+    <div style="color:var(--muted);font-size:14px">Loading notebooks...</div>
+  </div>
+  <div class="nb-section-pick">
+    <label>Section name (will be created if it doesn't exist)</label>
+    <input class="nb-section-input" id="sectionNameInput" placeholder="Site Surveys" value="Site Surveys">
+  </div>
+  <button class="btn-primary" style="margin-top:16px" onclick="saveNotebook()">Use this notebook →</button>
+</div>
+
+<!-- MAIN FORM -->
+<div id="formScreen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title">SDA Site Readiness</div>
+      <div class="topbar-sub" id="topbarSub">0 / 9 sections complete</div>
+    </div>
+    <div class="topbar-right">
+      <div class="user-dot" id="userDot">?</div>
+    </div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+
+  <div class="form-body">
+    <div class="meta-grid">
+      <div class="field"><label>Site name</label><input type="text" id="siteName" placeholder="Site name"></div>
+      <div class="field"><label>Visit date</label><input type="text" id="visitDate" placeholder="MM/DD/YYYY"></div>
+      <div class="field"><label>Engineer</label><input type="text" id="engineer" placeholder="Your name"></div>
+      <div class="field"><label>IDF / Room ID</label><input type="text" id="idfId" placeholder="IDF-01"></div>
+      <div class="field"><label>Site contact</label><input type="text" id="siteContact" placeholder="Contact name"></div>
+      <div class="field"><label>Contact phone</label><input type="text" id="contactPhone" placeholder="Phone #"></div>
+    </div>
+
+    <!-- SEC 1: POWER -->
+    <div class="section" id="sec1">
+      <div class="sec-head" onclick="toggleSec('sec1')">
+        <div class="sec-head-left">
+          <div class="sec-num">1</div>
+          <div class="sec-title">Power</div>
+          <span class="sec-badge pending" id="badge1">—</span>
+        </div>
+        <span class="chevron" id="chev1">▼</span>
+      </div>
+      <div class="sec-body" id="body1">
+        <div class="row2" style="margin-top:10px">
+          <div class="field"><label>Circuit (amps)</label><input type="number" id="p_amps" placeholder="A"></div>
+          <div class="field"><label>Voltage (V)</label><input type="number" id="p_volts" placeholder="V"></div>
+        </div>
+        <div class="field"><label>UPS present</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'p_ups','Y')">Y</button><button class="yn-btn" onclick="yn(this,'p_ups','N')">N</button></div></div>
+        <div class="field"><label>UPS model / headroom %</label><input type="text" id="p_upsModel" placeholder="Model — headroom %"></div>
+        <div class="field"><label>PDU present</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'p_pdu','Y')">Y</button><button class="yn-btn" onclick="yn(this,'p_pdu','N')">N</button></div></div>
+        <div class="row2">
+          <div class="field"><label>C13/C14 available</label><input type="number" id="p_c13" placeholder="count"></div>
+          <div class="field"><label>NEMA 5-15 available</label><input type="number" id="p_nema" placeholder="count"></div>
+        </div>
+        <div class="field"><label>Dedicated power drop</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'p_drop','Y')">Y</button><button class="yn-btn" onclick="yn(this,'p_drop','N')">N</button></div></div>
+        <div class="field"><label>Electrician required before install</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'p_elec','Y')">Y</button><button class="yn-btn" onclick="yn(this,'p_elec','N')">N</button></div></div>
+        <div class="field"><label>Notes</label><textarea id="p_notes" placeholder="Power notes..."></textarea></div>
+        <div class="status-strip">
+          <button class="st-btn" onclick="setSec('sec1','READY',this)">Ready</button>
+          <button class="st-btn" onclick="setSec('sec1','BLOCKERS',this)">Blockers</button>
+          <button class="st-btn" onclick="setSec('sec1','NOT READY',this)">Not ready</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEC 2: CABINET -->
+    <div class="section" id="sec2">
+      <div class="sec-head" onclick="toggleSec('sec2')">
+        <div class="sec-head-left">
+          <div class="sec-num">2</div>
+          <div class="sec-title">Cabinet / Rack</div>
+          <span class="sec-badge pending" id="badge2">—</span>
+        </div>
+        <span class="chevron" id="chev2">▼</span>
+      </div>
+      <div class="sec-body" id="body2">
+        <div class="row2" style="margin-top:10px">
+          <div class="field"><label>Free rack units (U)</label><input type="number" id="c_u" placeholder="U"></div>
+          <div class="field"><label>Room temp (°F)</label><input type="number" id="c_temp" placeholder="°F"></div>
+        </div>
+        <div class="field"><label>Shelves required</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'c_shelf','Y')">Y</button><button class="yn-btn" onclick="yn(this,'c_shelf','N')">N</button></div></div>
+        <div class="field"><label>Min 4U free for parallel install</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'c_4u','Y')">Y</button><button class="yn-btn" onclick="yn(this,'c_4u','N')">N</button></div></div>
+        <div class="field"><label>Cabinet locked</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'c_lock','Y')">Y</button><button class="yn-btn" onclick="yn(this,'c_lock','N')">N</button></div></div>
+        <div class="field"><label>Room access</label><div class="btn-group" id="grp_c_access">
+          <button class="tog-btn" onclick="tog(this,'c_access')">Key</button>
+          <button class="tog-btn" onclick="tog(this,'c_access')">Badge</button>
+          <button class="tog-btn" onclick="tog(this,'c_access')">Escort</button>
+          <button class="tog-btn" onclick="tog(this,'c_access')">Open</button>
+        </div></div>
+        <div class="field"><label>Airflow</label><div class="btn-group" id="grp_c_air">
+          <button class="tog-btn" onclick="tog(this,'c_air')">Front→Back</button>
+          <button class="tog-btn" onclick="tog(this,'c_air')">Back→Front</button>
+          <button class="tog-btn" onclick="tog(this,'c_air')">Open frame</button>
+          <button class="tog-btn" onclick="tog(this,'c_air')">Unknown</button>
+        </div></div>
+        <div class="field"><label>Notes</label><textarea id="c_notes" placeholder="Cabinet notes..."></textarea></div>
+        <div class="status-strip">
+          <button class="st-btn" onclick="setSec('sec2','READY',this)">Ready</button>
+          <button class="st-btn" onclick="setSec('sec2','BLOCKERS',this)">Blockers</button>
+          <button class="st-btn" onclick="setSec('sec2','NOT READY',this)">Not ready</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEC 3: FIBER -->
+    <div class="section" id="sec3">
+      <div class="sec-head" onclick="toggleSec('sec3')">
+        <div class="sec-head-left">
+          <div class="sec-num">3</div>
+          <div class="sec-title">Fiber & Cabling</div>
+          <span class="sec-badge pending" id="badge3">—</span>
+        </div>
+        <span class="chevron" id="chev3">▼</span>
+      </div>
+      <div class="sec-body" id="body3">
+        <div class="field" style="margin-top:10px"><label>Fiber panel present</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'f_panel','Y')">Y</button><button class="yn-btn" onclick="yn(this,'f_panel','N')">N</button></div></div>
+        <div class="field"><label>Connector type</label><div class="btn-group" id="grp_f_conn">
+          <button class="tog-btn" onclick="tog(this,'f_conn')">LC</button>
+          <button class="tog-btn" onclick="tog(this,'f_conn')">SC</button>
+          <button class="tog-btn" onclick="tog(this,'f_conn')">MPO</button>
+        </div></div>
+        <div class="row2">
+          <div class="field"><label>Total ports</label><input type="number" id="f_total" placeholder="total"></div>
+          <div class="field"><label>Available ports</label><input type="number" id="f_avail" placeholder="avail"></div>
+        </div>
+        <div class="field"><label>Fiber type</label><div class="btn-group" id="grp_f_type">
+          <button class="tog-btn" onclick="tog(this,'f_type')">SM</button>
+          <button class="tog-btn" onclick="tog(this,'f_type')">MM</button>
+          <button class="tog-btn" onclick="tog(this,'f_type')">Both</button>
+        </div></div>
+        <div class="row2">
+          <div class="field"><label>Run length (ft)</label><input type="number" id="f_len" placeholder="ft"></div>
+          <div class="field"><label>Spare strands</label><input type="number" id="f_spare" placeholder="count"></div>
+        </div>
+        <div class="field"><label>Spare strands for new uplinks</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'f_uplink','Y')">Y</button><button class="yn-btn" onclick="yn(this,'f_uplink','N')">N</button></div></div>
+        <div class="field"><label>Current SFP/SFP+ model</label><input type="text" id="f_sfp" placeholder="SFP model"></div>
+        <div class="field"><label>Cat6/Cat6A patch stock</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'f_cat6','Y')">Y</button><button class="yn-btn" onclick="yn(this,'f_cat6','N')">N</button></div></div>
+        <div class="field"><label>Cable plant condition</label><div class="btn-group" id="grp_f_cond">
+          <button class="tog-btn" onclick="tog(this,'f_cond')">Good</button>
+          <button class="tog-btn" onclick="tog(this,'f_cond')">Minor issues</button>
+          <button class="tog-btn" onclick="tog(this,'f_cond')">Needs remediation</button>
+        </div></div>
+        <div class="field"><label>Photos taken</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'f_photos','Y')">Y</button><button class="yn-btn" onclick="yn(this,'f_photos','N')">N</button></div></div>
+        <div class="field"><label>Notes</label><textarea id="f_notes" placeholder="Fiber notes..."></textarea></div>
+        <div class="status-strip">
+          <button class="st-btn" onclick="setSec('sec3','READY',this)">Ready</button>
+          <button class="st-btn" onclick="setSec('sec3','BLOCKERS',this)">Blockers</button>
+          <button class="st-btn" onclick="setSec('sec3','NOT READY',this)">Not ready</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEC 4: LEGACY SWITCHES -->
+    <div class="section" id="sec4">
+      <div class="sec-head" onclick="toggleSec('sec4')">
+        <div class="sec-head-left">
+          <div class="sec-num">4</div>
+          <div class="sec-title">Legacy Switches</div>
+          <span class="sec-badge pending" id="badge4">—</span>
+        </div>
+        <span class="chevron" id="chev4">▼</span>
+      </div>
+      <div class="sec-body" id="body4">
+        <div class="row2" style="margin-top:10px">
+          <div class="field"><label>Make / Vendor</label><input type="text" id="sw_make" placeholder="Vendor"></div>
+          <div class="field"><label>Model</label><input type="text" id="sw_model" placeholder="Model #"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Switch count</label><input type="number" id="sw_count" placeholder="count"></div>
+          <div class="field"><label>Stacks</label><input type="number" id="sw_stacks" placeholder="count"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Total ports</label><input type="number" id="sw_ports" placeholder="total"></div>
+          <div class="field"><label>Ports in use</label><input type="number" id="sw_inuse" placeholder="in use"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>PoE devices</label><input type="number" id="sw_poe" placeholder="count"></div>
+          <div class="field"><label>Uplink count</label><input type="number" id="sw_uplinks" placeholder="count"></div>
+        </div>
+        <div class="field"><label>Uplink type</label><div class="btn-group" id="grp_sw_up">
+          <button class="tog-btn" onclick="tog(this,'sw_up')">1G fiber</button>
+          <button class="tog-btn" onclick="tog(this,'sw_up')">10G fiber</button>
+          <button class="tog-btn" onclick="tog(this,'sw_up')">1G copper</button>
+          <button class="tog-btn" onclick="tog(this,'sw_up')">Other</button>
+        </div></div>
+        <div class="field"><label>Config backed up</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'sw_cfg','Y')">Y</button><button class="yn-btn" onclick="yn(this,'sw_cfg','N')">N</button></div></div>
+        <div class="field"><label>Serial number(s)</label><input type="text" id="sw_serial" placeholder="SN(s)"></div>
+        <div class="field"><label>Cutover window</label><input type="text" id="sw_cutover" placeholder="e.g. weekends only, after 10pm"></div>
+        <div class="status-strip">
+          <button class="st-btn" onclick="setSec('sec4','READY',this)">Ready</button>
+          <button class="st-btn" onclick="setSec('sec4','BLOCKERS',this)">Blockers</button>
+          <button class="st-btn" onclick="setSec('sec4','NOT READY',this)">Not ready</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEC 5: COMPUTERS -->
+    <div class="section" id="sec5">
+      <div class="sec-head" onclick="toggleSec('sec5')">
+        <div class="sec-head-left">
+          <div class="sec-num">5</div>
+          <div class="sec-title">Computers / Servers</div>
+          <span class="sec-badge pending" id="badge5">—</span>
+        </div>
+        <span class="chevron" id="chev5">▼</span>
+      </div>
+      <div class="sec-body" id="body5">
+        <div class="row2" style="margin-top:10px">
+          <div class="field"><label>Wired PCs</label><input type="number" id="pc_wired" placeholder="count"></div>
+          <div class="field"><label>Wireless PCs</label><input type="number" id="pc_wifi" placeholder="count"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Win 11 ready</label><input type="number" id="pc_w11" placeholder="count"></div>
+          <div class="field"><label>Non-compliant</label><input type="number" id="pc_nc" placeholder="count"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Network printers</label><input type="number" id="pc_print" placeholder="count"></div>
+          <div class="field"><label>Thin clients / VDI</label><input type="number" id="pc_thin" placeholder="count"></div>
+        </div>
+        <div class="field"><label>OS mix</label><div class="btn-group" id="grp_pc_os">
+          <button class="tog-btn" onclick="tog(this,'pc_os')">Win 11</button>
+          <button class="tog-btn" onclick="tog(this,'pc_os')">Win 10</button>
+          <button class="tog-btn" onclick="tog(this,'pc_os')">Win 7+</button>
+          <button class="tog-btn" onclick="tog(this,'pc_os')">macOS</button>
+          <button class="tog-btn" onclick="tog(this,'pc_os')">Linux</button>
+        </div></div>
+        <div class="field"><label>Specialty PCs / SCADA / CAD</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'pc_spec','Y')">Y</button><button class="yn-btn" onclick="yn(this,'pc_spec','N')">N</button></div></div>
+        <div class="field"><label>Printers on static IP</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'pc_staticip','Y')">Y</button><button class="yn-btn" onclick="yn(this,'pc_staticip','N')">N</button></div></div>
+        <div class="field"><label>Non-compliant model(s)</label><input type="text" id="pc_ncmodel" placeholder="Make / model"></div>
+        <div class="status-strip">
+          <button class="st-btn" onclick="setSec('sec5','READY',this)">Ready</button>
+          <button class="st-btn" onclick="setSec('sec5','BLOCKERS',this)">Blockers</button>
+          <button class="st-btn" onclick="setSec('sec5','NOT READY',this)">Not ready</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEC 6: CAMERAS -->
+    <div class="section" id="sec6">
+      <div class="sec-head" onclick="toggleSec('sec6')">
+        <div class="sec-head-left">
+          <div class="sec-num">6</div>
+          <div class="sec-title">Cameras / DVR</div>
+          <span class="sec-badge pending" id="badge6">—</span>
+        </div>
+        <span class="chevron" id="chev6">▼</span>
+      </div>
+      <div class="sec-body" id="body6">
+        <div class="row2" style="margin-top:10px">
+          <div class="field"><label>IP cameras</label><input type="number" id="cam_ip" placeholder="count"></div>
+          <div class="field"><label>Analog cameras</label><input type="number" id="cam_ana" placeholder="count"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>DVR/NVR make</label><input type="text" id="cam_make" placeholder="Make"></div>
+          <div class="field"><label>DVR/NVR model</label><input type="text" id="cam_model" placeholder="Model"></div>
+        </div>
+        <div class="field"><label>DVR on switch being replaced</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'cam_dvrsw','Y')">Y</button><button class="yn-btn" onclick="yn(this,'cam_dvrsw','N')">N</button></div></div>
+        <div class="field"><label>Camera VLAN isolated</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'cam_vlan','Y')">Y</button><button class="yn-btn" onclick="yn(this,'cam_vlan','N')">N</button></div></div>
+        <div class="field"><label>DVR location</label><div class="btn-group" id="grp_cam_loc">
+          <button class="tog-btn" onclick="tog(this,'cam_loc')">Same IDF</button>
+          <button class="tog-btn" onclick="tog(this,'cam_loc')">Server room</button>
+          <button class="tog-btn" onclick="tog(this,'cam_loc')">Remote</button>
+        </div></div>
+        <div class="field"><label>Cutover risk / notes</label><textarea id="cam_notes" placeholder="Camera cutover notes..."></textarea></div>
+        <div class="status-strip">
+          <button class="st-btn" onclick="setSec('sec6','READY',this)">Ready</button>
+          <button class="st-btn" onclick="setSec('sec6','BLOCKERS',this)">Blockers</button>
+          <button class="st-btn" onclick="setSec('sec6','NOT READY',this)">Not ready</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEC 7: IOT -->
+    <div class="section" id="sec7">
+      <div class="sec-head" onclick="toggleSec('sec7')">
+        <div class="sec-head-left">
+          <div class="sec-num">7</div>
+          <div class="sec-title">IoT Devices</div>
+          <span class="sec-badge pending" id="badge7">—</span>
+        </div>
+        <span class="chevron" id="chev7">▼</span>
+      </div>
+      <div class="sec-body" id="body7">
+        <div class="row2" style="margin-top:10px">
+          <div class="field"><label>Badge readers</label><input type="number" id="iot_badge" placeholder="count"></div>
+          <div class="field"><label>IP phones / VoIP</label><input type="number" id="iot_voip" placeholder="count"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Digital signage</label><input type="number" id="iot_sign" placeholder="count"></div>
+          <div class="field"><label>Other IoT</label><input type="number" id="iot_other" placeholder="count"></div>
+        </div>
+        <div class="field"><label>Access control vendor</label><input type="text" id="iot_acv" placeholder="Vendor name"></div>
+        <div class="field"><label>Call manager / PBX</label><input type="text" id="iot_pbx" placeholder="CM / PBX system"></div>
+        <div class="field"><label>Proprietary IoT (needs gateway)</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'iot_prop','Y')">Y</button><button class="yn-btn" onclick="yn(this,'iot_prop','N')">N</button></div></div>
+        <div class="field"><label>Isolated VLAN needed</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'iot_vlan','Y')">Y</button><button class="yn-btn" onclick="yn(this,'iot_vlan','N')">N</button></div></div>
+        <div class="status-strip">
+          <button class="st-btn" onclick="setSec('sec7','READY',this)">Ready</button>
+          <button class="st-btn" onclick="setSec('sec7','BLOCKERS',this)">Blockers</button>
+          <button class="st-btn" onclick="setSec('sec7','NOT READY',this)">Not ready</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEC 8: WIRELESS -->
+    <div class="section" id="sec8">
+      <div class="sec-head" onclick="toggleSec('sec8')">
+        <div class="sec-head-left">
+          <div class="sec-num">8</div>
+          <div class="sec-title">Wireless APs</div>
+          <span class="sec-badge pending" id="badge8">—</span>
+        </div>
+        <span class="chevron" id="chev8">▼</span>
+      </div>
+      <div class="sec-body" id="body8">
+        <div class="field" style="margin-top:10px"><label>APs present</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'ap_pres','Y')">Y</button><button class="yn-btn" onclick="yn(this,'ap_pres','N')">N</button></div></div>
+        <div class="row2">
+          <div class="field"><label>Interior AP count</label><input type="number" id="ap_int" placeholder="count"></div>
+          <div class="field"><label>Exterior AP count</label><input type="number" id="ap_ext" placeholder="count"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>AP brand</label><input type="text" id="ap_brand" placeholder="Brand"></div>
+          <div class="field"><label>AP model</label><input type="text" id="ap_model" placeholder="Model"></div>
+        </div>
+        <div class="field"><label>Connects to Catalyst 9K</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'ap_9k','Y')">Y</button><button class="yn-btn" onclick="yn(this,'ap_9k','N')">N</button></div></div>
+        <div class="field"><label>Notes</label><textarea id="ap_notes" placeholder="AP notes..."></textarea></div>
+        <div class="status-strip">
+          <button class="st-btn" onclick="setSec('sec8','READY',this)">Ready</button>
+          <button class="st-btn" onclick="setSec('sec8','BLOCKERS',this)">Blockers</button>
+          <button class="st-btn" onclick="setSec('sec8','NOT READY',this)">Not ready</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEC 9: SIGN-OFF -->
+    <div class="section" id="sec9">
+      <div class="sec-head" onclick="toggleSec('sec9')">
+        <div class="sec-head-left">
+          <div class="sec-num">9</div>
+          <div class="sec-title">Sign-off</div>
+          <span class="sec-badge pending" id="badge9">—</span>
+        </div>
+        <span class="chevron" id="chev9">▼</span>
+      </div>
+      <div class="sec-body" id="body9">
+        <div class="row2" style="margin-top:10px">
+          <div class="field"><label>After-hours contact</label><input type="text" id="so_ah" placeholder="Name / number"></div>
+          <div class="field"><label>Ticket / project ref #</label><input type="text" id="so_ticket" placeholder="Ref #"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Est. install time (hrs)</label><input type="number" id="so_hrs" placeholder="hrs"></div>
+          <div class="field"><label>Preferred cutover window</label><input type="text" id="so_window" placeholder="e.g. Sat 10pm–2am"></div>
+        </div>
+        <div class="field"><label>Photos of rack taken</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'so_photos','Y')">Y</button><button class="yn-btn" onclick="yn(this,'so_photos','N')">N</button></div></div>
+        <div class="field"><label>All blockers logged in ticket</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'so_logged','Y')">Y</button><button class="yn-btn" onclick="yn(this,'so_logged','N')">N</button></div></div>
+        <div class="field"><label>Overall site notes / blockers</label><textarea id="so_notes" placeholder="Anything blocking install..."></textarea></div>
+        <div class="status-strip">
+          <button class="st-btn" onclick="setSec('sec9','READY',this)">Ready</button>
+          <button class="st-btn" onclick="setSec('sec9','BLOCKERS',this)">Blockers</button>
+          <button class="st-btn" onclick="setSec('sec9','NOT READY',this)">Not ready</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OVERALL STATUS -->
+  <div class="overall-wrap">
+    <div class="overall-label">Overall site status</div>
+    <div class="overall-strip">
+      <button class="ov-btn" onclick="setOverall(this,'READY FOR INSTALL')">Ready for install</button>
+      <button class="ov-btn" onclick="setOverall(this,'BLOCKERS')">Blockers</button>
+      <button class="ov-btn" onclick="setOverall(this,'NOT READY')">Not ready</button>
+    </div>
+  </div>
+
+  <div class="submit-wrap">
+    <button class="submit-btn" id="submitBtn" onclick="submitToOneNote()">Save to OneNote →</button>
+    <div class="submit-status" id="submitStatus"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SCOPES = 'Notes.Create Notes.ReadWrite offline_access User.Read';
+const GRAPH = 'https://graph.microsoft.com/v1.0';
+const state = { statuses:{}, overall:'', yn:{}, tog:{} };
+let accessToken = null;
+let selectedNotebookId = null;
+let selectedSectionId = null;
+let clientId = null;
+
+// ---- INIT ----
+window.onload = () => {
+  clientId = localStorage.getItem('sda_client_id');
+  const nb = localStorage.getItem('sda_notebook_id');
+  const sec = localStorage.getItem('sda_section_id');
+  // Handle OAuth redirect
+  const hash = window.location.hash;
+  if (hash.includes('access_token')) {
+    const params = new URLSearchParams(hash.replace('#','?'));
+    accessToken = params.get('access_token');
+    sessionStorage.setItem('sda_token', accessToken);
+    window.location.hash = '';
+    if (nb && sec) {
+      selectedNotebookId = nb;
+      selectedSectionId = sec;
+      showForm();
+    } else {
+      loadNotebooks();
+    }
+    return;
+  }
+  accessToken = sessionStorage.getItem('sda_token');
+  if (accessToken && nb && sec) {
+    selectedNotebookId = nb;
+    selectedSectionId = sec;
+    showForm();
+  } else if (clientId) {
+    show('authScreen');
+  } else {
+    show('setupScreen');
+  }
+  // Set today's date
+  const today = new Date();
+  const dateEl = document.getElementById('visitDate');
+  if (dateEl) dateEl.value = (today.getMonth()+1).toString().padStart(2,'0') + '/' + today.getDate().toString().padStart(2,'0') + '/' + today.getFullYear();
+};
+
+function show(id) {
+  ['setupScreen','authScreen','notebookScreen','formScreen'].forEach(s => {
+    const el = document.getElementById(s);
+    el.style.display = 'none';
+  });
+  const target = document.getElementById(id);
+  target.style.display = 'flex';
+  target.style.flexDirection = 'column';
+}
+
+// ---- SETUP ----
+function saveSetup() {
+  const id = document.getElementById('clientIdInput').value.trim();
+  if (!id || id.length < 30) { showToast('Enter a valid Client ID', 'error'); return; }
+  clientId = id;
+  localStorage.setItem('sda_client_id', id);
+  show('authScreen');
+}
+
+function resetSetup() {
+  show('setupScreen');
+}
+
+// ---- AUTH ----
+function signIn() {
+  if (!clientId) { show('setupScreen'); return; }
+  const redirectUri = encodeURIComponent(window.location.href.split('#')[0]);
+  const url = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=${clientId}&response_type=token&redirect_uri=${redirectUri}&scope=${encodeURIComponent(SCOPES)}&response_mode=fragment`;
+  window.location.href = url;
+}
+
+// ---- NOTEBOOKS ----
+async function loadNotebooks() {
+  show('notebookScreen');
+  const list = document.getElementById('notebookList');
+  list.innerHTML = '<div style="color:var(--muted);font-size:14px">Loading...</div>';
+  try {
+    const res = await fetch(`${GRAPH}/me/onenote/notebooks`, { headers: { Authorization: `Bearer ${accessToken}` } });
+    const data = await res.json();
+    if (!data.value) throw new Error('No notebooks found');
+    list.innerHTML = '';
+    data.value.forEach(nb => {
+      const div = document.createElement('div');
+      div.className = 'nb-item';
+      div.dataset.id = nb.id;
+      div.innerHTML = `<span class="nb-item-name">${nb.displayName}</span><span class="nb-item-check"></span>`;
+      div.onclick = () => {
+        document.querySelectorAll('.nb-item').forEach(i => i.classList.remove('selected'));
+        div.classList.add('selected');
+        selectedNotebookId = nb.id;
+      };
+      list.appendChild(div);
+    });
+  } catch(e) {
+    list.innerHTML = '<div style="color:var(--red);font-size:14px">Could not load notebooks. Check permissions.</div>';
+  }
+}
+
+async function saveNotebook() {
+  if (!selectedNotebookId) { showToast('Select a notebook first', 'error'); return; }
+  const sectionName = document.getElementById('sectionNameInput').value.trim() || 'Site Surveys';
+  try {
+    // Try to find or create the section
+    const res = await fetch(`${GRAPH}/me/onenote/notebooks/${selectedNotebookId}/sections`, { headers: { Authorization: `Bearer ${accessToken}` } });
+    const data = await res.json();
+    let section = (data.value || []).find(s => s.displayName === sectionName);
+    if (!section) {
+      const cr = await fetch(`${GRAPH}/me/onenote/notebooks/${selectedNotebookId}/sections`, {
+        method: 'POST', headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ displayName: sectionName })
+      });
+      section = await cr.json();
+    }
+    selectedSectionId = section.id;
+    localStorage.setItem('sda_notebook_id', selectedNotebookId);
+    localStorage.setItem('sda_section_id', selectedSectionId);
+    showForm();
+  } catch(e) {
+    showToast('Error setting up section', 'error');
+  }
+}
+
+async function showForm() {
+  show('formScreen');
+  try {
+    const res = await fetch(`${GRAPH}/me`, { headers: { Authorization: `Bearer ${accessToken}` } });
+    const user = await res.json();
+    const initials = (user.displayName || 'ME').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    document.getElementById('userDot').textContent = initials;
+    const engEl = document.getElementById('engineer');
+    if (engEl && !engEl.value) engEl.value = user.displayName || '';
+  } catch(e) {}
+}
+
+// ---- FORM LOGIC ----
+function toggleSec(id) {
+  const num = id.replace('sec','');
+  const body = document.getElementById('body'+num);
+  const chev = document.getElementById('chev'+num);
+  const open = body.classList.contains('open');
+  body.classList.toggle('open', !open);
+  chev.classList.toggle('open', !open);
+}
+
+function yn(btn, key, val) {
+  const grp = btn.parentElement;
+  grp.querySelectorAll('.yn-btn').forEach(b => b.classList.remove('y','n'));
+  btn.classList.add(val === 'Y' ? 'y' : 'n');
+  state.yn[key] = val;
+}
+
+function tog(btn, key) {
+  btn.classList.toggle('on');
+  if (!state.tog[key]) state.tog[key] = [];
+  const txt = btn.textContent.trim();
+  const idx = state.tog[key].indexOf(txt);
+  if (idx >= 0) state.tog[key].splice(idx,1); else state.tog[key].push(txt);
+}
+
+function setSec(secId, val, btn) {
+  state.statuses[secId] = val;
+  const num = secId.replace('sec','');
+  const badge = document.getElementById('badge'+num);
+  const strip = btn.closest('.status-strip');
+  strip.querySelectorAll('.st-btn').forEach(b => b.classList.remove('ready','blockers','notready'));
+  badge.className = 'sec-badge';
+  if (val === 'READY') { badge.classList.add('ready'); badge.textContent = 'Ready'; btn.classList.add('ready'); }
+  else if (val === 'BLOCKERS') { badge.classList.add('blockers'); badge.textContent = 'Blockers'; btn.classList.add('blockers'); }
+  else { badge.classList.add('notready'); badge.textContent = 'Not ready'; btn.classList.add('notready'); }
+  updateProgress();
+}
+
+function setOverall(btn, val) {
+  state.overall = val;
+  document.querySelectorAll('.ov-btn').forEach(b => b.classList.remove('ready','blockers','notready'));
+  if (val === 'READY FOR INSTALL') btn.classList.add('ready');
+  else if (val === 'BLOCKERS') btn.classList.add('blockers');
+  else btn.classList.add('notready');
+}
+
+function updateProgress() {
+  const done = Object.keys(state.statuses).length;
+  document.getElementById('topbarSub').textContent = done + ' / 9 sections complete';
+  document.getElementById('progressFill').style.width = Math.round(done/9*100) + '%';
+}
+
+function g(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
+function yv(k) { return state.yn[k] || '—'; }
+function tv(k) { return (state.tog[k]||[]).join(', ') || '—'; }
+function st(k) { return state.statuses[k] || '—'; }
+
+// ---- ONENOTE SUBMIT ----
+async function submitToOneNote() {
+  const btn = document.getElementById('submitBtn');
+  const status = document.getElementById('submitStatus');
+  const site = g('siteName') || 'Unknown Site';
+  const date = g('visitDate') || new Date().toLocaleDateString();
+  const idf = g('idfId') || 'IDF';
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Saving to OneNote...';
+  status.textContent = '';
+  status.className = 'submit-status';
+
+  const html = buildOneNoteHTML(site, date, idf);
+
+  try {
+    const res = await fetch(`${GRAPH}/me/onenote/sections/${selectedSectionId}/pages`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'text/html' },
+      body: html
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      if (err.error && err.error.code === 'ErrorAccessDenied') {
+        // Token expired, re-auth
+        sessionStorage.removeItem('sda_token');
+        accessToken = null;
+        show('authScreen');
+        return;
+      }
+      throw new Error(err.error?.message || 'Unknown error');
+    }
+    btn.innerHTML = '✓ Saved to OneNote';
+    btn.style.background = 'var(--green)';
+    status.textContent = `Page created: "${site} — ${idf} — ${date}"`;
+    status.className = 'submit-status success';
+    showToast('Saved to OneNote!', 'success');
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.innerHTML = 'Save to OneNote →';
+      btn.style.background = '';
+    }, 4000);
+  } catch(e) {
+    btn.disabled = false;
+    btn.innerHTML = 'Save to OneNote →';
+    status.textContent = 'Error: ' + e.message;
+    status.className = 'submit-status error';
+    showToast('Save failed', 'error');
+  }
+}
+
+function buildOneNoteHTML(site, date, idf) {
+  const eng = g('engineer');
+  const contact = g('siteContact');
+  const phone = g('contactPhone');
+  const overall = state.overall || '—';
+  const overallColor = overall === 'READY FOR INSTALL' ? '#22c55e' : overall === 'BLOCKERS' ? '#f59e0b' : '#ef4444';
+
+  const row = (label, val) => `<tr><td style="padding:6px 12px;color:#666;font-size:13px;white-space:nowrap;width:180px">${label}</td><td style="padding:6px 12px;font-size:13px">${val||'—'}</td></tr>`;
+  const secHeader = (num, title, secKey) => {
+    const s = state.statuses[secKey] || '—';
+    const c = s==='READY'?'#22c55e':s==='BLOCKERS'?'#f59e0b':s==='NOT READY'?'#ef4444':'#999';
+    return `<h2 style="font-size:14px;font-weight:600;margin:24px 0 8px;padding:8px 12px;background:#f5f5f5;border-left:4px solid ${c}">${num}. ${title} <span style="color:${c};font-size:12px">[${s}]</span></h2>`;
+  };
+
+  return `<!DOCTYPE html><html><head><title>${site} — ${idf} — ${date}</title></head><body>
+<h1 style="font-size:20px;font-weight:700;margin-bottom:4px">SDA Site Readiness: ${site}</h1>
+<p style="color:#666;font-size:13px;margin-bottom:16px">${idf} &nbsp;|&nbsp; ${date} &nbsp;|&nbsp; Engineer: ${eng||'—'}</p>
+<p style="margin-bottom:4px;font-size:13px"><strong>Site contact:</strong> ${contact||'—'} &nbsp; ${phone||''}</p>
+<p style="margin:16px 0;font-size:14px;font-weight:700;color:${overallColor};background:${overallColor}18;padding:10px 14px;border-radius:6px">OVERALL STATUS: ${overall}</p>
+
+${secHeader(1,'Power','sec1')}
+<table style="border-collapse:collapse;width:100%">
+${row('Circuit',''+g('p_amps')+'A / '+g('p_volts')+'V')}
+${row('UPS',yv('p_ups')+(g('p_upsModel')?' — '+g('p_upsModel'):''))}
+${row('PDU',yv('p_pdu'))}
+${row('C13/C14 available',g('p_c13'))}
+${row('NEMA 5-15 available',g('p_nema'))}
+${row('Dedicated power drop',yv('p_drop'))}
+${row('Electrician required',yv('p_elec'))}
+${g('p_notes')?row('Notes',g('p_notes')):''}
+</table>
+
+${secHeader(2,'Cabinet / Rack','sec2')}
+<table style="border-collapse:collapse;width:100%">
+${row('Free rack units',g('c_u')+' U')}
+${row('Room temp',g('c_temp')+'°F')}
+${row('Shelves required',yv('c_shelf'))}
+${row('4U free for parallel',yv('c_4u'))}
+${row('Cabinet locked',yv('c_lock'))}
+${row('Room access',tv('c_access'))}
+${row('Airflow',tv('c_air'))}
+${g('c_notes')?row('Notes',g('c_notes')):''}
+</table>
+
+${secHeader(3,'Fiber & Cabling','sec3')}
+<table style="border-collapse:collapse;width:100%">
+${row('Fiber panel',yv('f_panel'))}
+${row('Connector type',tv('f_conn'))}
+${row('Ports',g('f_total')+' total / '+g('f_avail')+' available')}
+${row('Fiber type',tv('f_type'))}
+${row('Run length',g('f_len')+' ft')}
+${row('Spare strands',g('f_spare'))}
+${row('Spare for uplinks',yv('f_uplink'))}
+${row('SFP/SFP+ model',g('f_sfp'))}
+${row('Cat6 stock',yv('f_cat6'))}
+${row('Cable plant condition',tv('f_cond'))}
+${row('Photos taken',yv('f_photos'))}
+${g('f_notes')?row('Notes',g('f_notes')):''}
+</table>
+
+${secHeader(4,'Legacy Switches','sec4')}
+<table style="border-collapse:collapse;width:100%">
+${row('Make / Model',g('sw_make')+' '+g('sw_model'))}
+${row('Count / Stacks',g('sw_count')+' switches / '+g('sw_stacks')+' stacks')}
+${row('Ports',g('sw_ports')+' total / '+g('sw_inuse')+' in use')}
+${row('PoE devices',g('sw_poe'))}
+${row('Uplink',tv('sw_up')+' x'+g('sw_uplinks'))}
+${row('Config backed up',yv('sw_cfg'))}
+${g('sw_serial')?row('Serial #(s)',g('sw_serial')):''}
+${g('sw_cutover')?row('Cutover window',g('sw_cutover')):''}
+</table>
+
+${secHeader(5,'Computers / Servers','sec5')}
+<table style="border-collapse:collapse;width:100%">
+${row('Wired / Wireless PCs',g('pc_wired')+' wired / '+g('pc_wifi')+' wireless')}
+${row('Win 11 ready / Non-compliant',g('pc_w11')+' ready / '+g('pc_nc')+' non-compliant')}
+${row('Printers / Thin clients',g('pc_print')+' printers / '+g('pc_thin')+' thin/VDI')}
+${row('OS mix',tv('pc_os'))}
+${row('Specialty / SCADA',yv('pc_spec'))}
+${row('Printers static IP',yv('pc_staticip'))}
+${g('pc_ncmodel')?row('Non-compliant models',g('pc_ncmodel')):''}
+</table>
+
+${secHeader(6,'Cameras / DVR','sec6')}
+<table style="border-collapse:collapse;width:100%">
+${row('IP / Analog cameras',g('cam_ip')+' IP / '+g('cam_ana')+' analog')}
+${row('DVR/NVR',g('cam_make')+' '+g('cam_model'))}
+${row('DVR on replaced switch',yv('cam_dvrsw'))}
+${row('Camera VLAN isolated',yv('cam_vlan'))}
+${row('DVR location',tv('cam_loc'))}
+${g('cam_notes')?row('Notes',g('cam_notes')):''}
+</table>
+
+${secHeader(7,'IoT Devices','sec7')}
+<table style="border-collapse:collapse;width:100%">
+${row('Badge readers',g('iot_badge'))}
+${row('IP phones / VoIP',g('iot_voip'))}
+${row('Digital signage',g('iot_sign'))}
+${row('Other IoT',g('iot_other'))}
+${row('Access control vendor',g('iot_acv'))}
+${row('Call manager / PBX',g('iot_pbx'))}
+${row('Proprietary IoT',yv('iot_prop'))}
+${row('Isolated VLAN needed',yv('iot_vlan'))}
+</table>
+
+${secHeader(8,'Wireless APs','sec8')}
+<table style="border-collapse:collapse;width:100%">
+${row('APs present',yv('ap_pres'))}
+${row('Interior / Exterior APs',g('ap_int')+' interior / '+g('ap_ext')+' exterior')}
+${row('Brand / Model',g('ap_brand')+' '+g('ap_model'))}
+${row('Connects to Catalyst 9K',yv('ap_9k'))}
+${g('ap_notes')?row('Notes',g('ap_notes')):''}
+</table>
+
+${secHeader(9,'Sign-off','sec9')}
+<table style="border-collapse:collapse;width:100%">
+${row('After-hours contact',g('so_ah'))}
+${row('Ticket / Ref #',g('so_ticket'))}
+${row('Est. install time',g('so_hrs')+' hrs')}
+${row('Cutover window',g('so_window'))}
+${row('Photos taken',yv('so_photos'))}
+${row('Blockers logged',yv('so_logged'))}
+${g('so_notes')?row('Site notes / blockers',g('so_notes')):''}
+</table>
+
+<p style="color:#999;font-size:11px;margin-top:32px">Generated by SDA Site Readiness Tool</p>
+</body></html>`;
+}
+
+// ---- TOAST ----
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + (type||'');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+</script>
+</body>
+</html>
