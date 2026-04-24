@@ -317,7 +317,7 @@
           <div class="field"><label>Room temp (°F)</label><input type="number" id="c_temp" placeholder="°F"></div>
         </div>
         <div class="field"><label>Shelves required</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'c_shelf','Y')">Y</button><button class="yn-btn" onclick="yn(this,'c_shelf','N')">N</button></div></div>
-        <div class="field"><label>Min 4U free for parallel install</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'c_4u','Y')">Y</button><button class="yn-btn" onclick="yn(this,'c_4u','N')">N</button></div></div>
+        <div class="field"><label>Room for parallel install</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'c_4u','Y')">Y</button><button class="yn-btn" onclick="yn(this,'c_4u','N')">N</button></div></div>
         <div class="field"><label>Cabinet locked</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'c_lock','Y')">Y</button><button class="yn-btn" onclick="yn(this,'c_lock','N')">N</button></div></div>
         <div class="field"><label>Room access</label><div class="btn-group" id="grp_c_access">
           <button class="tog-btn" onclick="tog(this,'c_access')">Key</button>
@@ -355,11 +355,11 @@
         <div class="field"><label>Connector type</label><div class="btn-group" id="grp_f_conn">
           <button class="tog-btn" onclick="tog(this,'f_conn')">LC</button>
           <button class="tog-btn" onclick="tog(this,'f_conn')">SC</button>
-          <button class="tog-btn" onclick="tog(this,'f_conn')">MPO</button>
+          <button class="tog-btn" onclick="tog(this,'f_conn')">ST</button>
         </div></div>
         <div class="row2">
-          <div class="field"><label>Total ports</label><input type="number" id="f_total" placeholder="total"></div>
-          <div class="field"><label>Available ports</label><input type="number" id="f_avail" placeholder="avail"></div>
+          <div class="field"><label>Total strands</label><input type="number" id="f_total" placeholder="total"></div>
+          <div class="field"><label>Available strands</label><input type="number" id="f_avail" placeholder="avail"></div>
         </div>
         <div class="field"><label>Fiber type</label><div class="btn-group" id="grp_f_type">
           <button class="tog-btn" onclick="tog(this,'f_type')">SM</button>
@@ -371,7 +371,6 @@
           <div class="field"><label>Spare strands</label><input type="number" id="f_spare" placeholder="count"></div>
         </div>
         <div class="field"><label>Spare strands for new uplinks</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'f_uplink','Y')">Y</button><button class="yn-btn" onclick="yn(this,'f_uplink','N')">N</button></div></div>
-        <div class="field"><label>Current SFP/SFP+ model</label><input type="text" id="f_sfp" placeholder="SFP model"></div>
         <div class="field"><label>Cat6/Cat6A patch stock</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'f_cat6','Y')">Y</button><button class="yn-btn" onclick="yn(this,'f_cat6','N')">N</button></div></div>
         <div class="field"><label>Cable plant condition</label><div class="btn-group" id="grp_f_cond">
           <button class="tog-btn" onclick="tog(this,'f_cond')">Good</button>
@@ -453,7 +452,6 @@
         </div>
         <div class="row2">
           <div class="field"><label>Network printers</label><input type="number" id="pc_print" placeholder="count"></div>
-          <div class="field"><label>Thin clients / VDI</label><input type="number" id="pc_thin" placeholder="count"></div>
         </div>
         <div class="field"><label>OS mix</label><div class="btn-group" id="grp_pc_os">
           <button class="tog-btn" onclick="tog(this,'pc_os')">Win 11</button>
@@ -691,7 +689,7 @@ function resetSetup() {
 function signIn() {
   if (!clientId) { show('setupScreen'); return; }
   const redirectUri = encodeURIComponent(window.location.href.split('#')[0]);
-  const url = `https://login.microsoftonline.com/r2ut.com/oauth2/v2.0/authorize?client_id=${clientId}&response_type=token&redirect_uri=${encodeURIComponent(window.location.href.split('#')[0])}&scope=${encodeURIComponent(SCOPES)}&response_mode=fragment`;
+  const url = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=${clientId}&response_type=token&redirect_uri=${redirectUri}&scope=${encodeURIComponent(SCOPES)}&response_mode=fragment`;
   window.location.href = url;
 }
 
@@ -903,7 +901,7 @@ ${secHeader(2,'Cabinet / Rack','sec2')}
 ${row('Free rack units',g('c_u')+' U')}
 ${row('Room temp',g('c_temp')+'°F')}
 ${row('Shelves required',yv('c_shelf'))}
-${row('4U free for parallel',yv('c_4u'))}
+${row('Room for parallel install',yv('c_4u'))}
 ${row('Cabinet locked',yv('c_lock'))}
 ${row('Room access',tv('c_access'))}
 ${row('Airflow',tv('c_air'))}
@@ -914,12 +912,11 @@ ${secHeader(3,'Fiber & Cabling','sec3')}
 <table style="border-collapse:collapse;width:100%">
 ${row('Fiber panel',yv('f_panel'))}
 ${row('Connector type',tv('f_conn'))}
-${row('Ports',g('f_total')+' total / '+g('f_avail')+' available')}
+${row('Strands',g('f_total')+' total / '+g('f_avail')+' available')}
 ${row('Fiber type',tv('f_type'))}
 ${row('Run length',g('f_len')+' ft')}
 ${row('Spare strands',g('f_spare'))}
 ${row('Spare for uplinks',yv('f_uplink'))}
-${row('SFP/SFP+ model',g('f_sfp'))}
 ${row('Cat6 stock',yv('f_cat6'))}
 ${row('Cable plant condition',tv('f_cond'))}
 ${row('Photos taken',yv('f_photos'))}
@@ -942,7 +939,7 @@ ${secHeader(5,'Computers / Servers','sec5')}
 <table style="border-collapse:collapse;width:100%">
 ${row('Wired / Wireless PCs',g('pc_wired')+' wired / '+g('pc_wifi')+' wireless')}
 ${row('Win 11 ready / Non-compliant',g('pc_w11')+' ready / '+g('pc_nc')+' non-compliant')}
-${row('Printers / Thin clients',g('pc_print')+' printers / '+g('pc_thin')+' thin/VDI')}
+${row('Printers',g('pc_print')+' printers')}
 ${row('OS mix',tv('pc_os'))}
 ${row('Specialty / SCADA',yv('pc_spec'))}
 ${row('Printers static IP',yv('pc_staticip'))}
