@@ -185,6 +185,29 @@
   .rack-unit-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; fill: #5a6a8a; }
   .rack-device-label { font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 600; }
   .rack-device-sublabel { font-family: 'JetBrains Mono', monospace; font-size: 9px; fill: #8892a8; }
+
+  /* SOURCE BUTTONS — Camera / Gallery */
+  .source-btns { display: flex; gap: 8px; }
+  input[type=file] { display: none; }
+  .source-btn {
+    flex: 1; padding: 14px 8px; border-radius: 8px;
+    border: 1px dashed var(--border2); background: var(--surface2);
+    font-size: 13px; font-weight: 600; color: var(--muted);
+    text-align: center; cursor: pointer; display: block;
+    transition: all 0.15s;
+  }
+  .source-btn:active { transform: scale(0.97); }
+  .camera-source { border-color: rgba(79,142,247,0.3); color: var(--accent); }
+  .gallery-source { border-color: var(--border2); }
+  .preview-wrap { position: relative; border-radius: 8px; overflow: hidden; margin-bottom: 0; }
+  .preview-img { width: 100%; display: block; border-radius: 8px; }
+  .retake-btn-inline {
+    position: absolute; top: 8px; right: 8px;
+    background: rgba(8,11,18,0.85); backdrop-filter: blur(8px);
+    border: 1px solid rgba(99,140,255,0.2); border-radius: 8px;
+    padding: 6px 12px; font-size: 12px; font-weight: 600;
+    color: #e8eeff; cursor: pointer;
+  }
 </style>
 </head>
 <body>
@@ -229,16 +252,15 @@
         <div class="photo-slot-status" id="slotStatus0">📷</div>
       </div>
       <div class="photo-slot-body">
-        <div class="camera-btn-wrap">
-          <label for="photoInput0">
-            <div class="camera-btn" id="cameraBtnDiv0">
-              <div class="camera-btn-icon" id="camIcon0">📷</div>
-              <div class="camera-btn-text" id="camText0">Tap to capture</div>
-              <img class="preview-img" id="previewImg0" alt="Full rack">
-            </div>
-          </label>
-          <input type="file" id="photoInput0" accept="image/*" onchange="handlePhoto(event,0)">
-          <button class="retake-btn" id="retakeBtn0" onclick="retakePhoto(0)">↺ Retake</button>
+        <div class="preview-wrap" id="previewWrap0" style="display:none">
+          <img class="preview-img" id="previewImg0" alt="Full rack">
+          <button class="retake-btn-inline" onclick="retakePhoto(0)">↺ Retake</button>
+        </div>
+        <div class="source-btns" id="sourceBtns0">
+          <label for="cameraInput0" class="source-btn camera-source">📷 Camera</label>
+          <label for="galleryInput0" class="source-btn gallery-source">🖼 Gallery</label>
+          <input type="file" id="cameraInput0" accept="image/*" capture="environment" onchange="handlePhoto(event,0)">
+          <input type="file" id="galleryInput0" accept="image/*" onchange="handlePhoto(event,0)">
         </div>
       </div>
     </div>
@@ -254,16 +276,15 @@
         <div class="photo-slot-status" id="slotStatus1">📷</div>
       </div>
       <div class="photo-slot-body">
-        <div class="camera-btn-wrap">
-          <label for="photoInput1">
-            <div class="camera-btn" id="cameraBtnDiv1">
-              <div class="camera-btn-icon" id="camIcon1">📷</div>
-              <div class="camera-btn-text" id="camText1">Tap to capture</div>
-              <img class="preview-img" id="previewImg1" alt="Top half">
-            </div>
-          </label>
-          <input type="file" id="photoInput1" accept="image/*" onchange="handlePhoto(event,1)">
-          <button class="retake-btn" id="retakeBtn1" onclick="retakePhoto(1)">↺ Retake</button>
+        <div class="preview-wrap" id="previewWrap1" style="display:none">
+          <img class="preview-img" id="previewImg1" alt="Top half">
+          <button class="retake-btn-inline" onclick="retakePhoto(1)">↺ Retake</button>
+        </div>
+        <div class="source-btns" id="sourceBtns1">
+          <label for="cameraInput1" class="source-btn camera-source">📷 Camera</label>
+          <label for="galleryInput1" class="source-btn gallery-source">🖼 Gallery</label>
+          <input type="file" id="cameraInput1" accept="image/*" capture="environment" onchange="handlePhoto(event,1)">
+          <input type="file" id="galleryInput1" accept="image/*" onchange="handlePhoto(event,1)">
         </div>
       </div>
     </div>
@@ -279,16 +300,15 @@
         <div class="photo-slot-status" id="slotStatus2">📷</div>
       </div>
       <div class="photo-slot-body">
-        <div class="camera-btn-wrap">
-          <label for="photoInput2">
-            <div class="camera-btn" id="cameraBtnDiv2">
-              <div class="camera-btn-icon" id="camIcon2">📷</div>
-              <div class="camera-btn-text" id="camText2">Tap to capture</div>
-              <img class="preview-img" id="previewImg2" alt="Bottom half">
-            </div>
-          </label>
-          <input type="file" id="photoInput2" accept="image/*" onchange="handlePhoto(event,2)">
-          <button class="retake-btn" id="retakeBtn2" onclick="retakePhoto(2)">↺ Retake</button>
+        <div class="preview-wrap" id="previewWrap2" style="display:none">
+          <img class="preview-img" id="previewImg2" alt="Bottom half">
+          <button class="retake-btn-inline" onclick="retakePhoto(2)">↺ Retake</button>
+        </div>
+        <div class="source-btns" id="sourceBtns2">
+          <label for="cameraInput2" class="source-btn camera-source">📷 Camera</label>
+          <label for="galleryInput2" class="source-btn gallery-source">🖼 Gallery</label>
+          <input type="file" id="cameraInput2" accept="image/*" capture="environment" onchange="handlePhoto(event,2)">
+          <input type="file" id="galleryInput2" accept="image/*" onchange="handlePhoto(event,2)">
         </div>
       </div>
     </div>
@@ -393,12 +413,10 @@ function handlePhoto(event, idx) {
   const reader = new FileReader();
   reader.onload = (e) => {
     images[idx] = e.target.result.split(',')[1];
-    document.getElementById('previewImg' + idx).src = e.target.result;
-    document.getElementById('previewImg' + idx).classList.add('show');
-    document.getElementById('cameraBtnDiv' + idx).classList.add('has-image');
-    document.getElementById('camIcon' + idx).style.display = 'none';
-    document.getElementById('camText' + idx).style.display = 'none';
-    document.getElementById('retakeBtn' + idx).classList.add('show');
+    const img = document.getElementById('previewImg' + idx);
+    img.src = e.target.result;
+    document.getElementById('previewWrap' + idx).style.display = 'block';
+    document.getElementById('sourceBtns' + idx).style.display = 'none';
     document.getElementById('slotStatus' + idx).textContent = '✅';
     document.getElementById('slot' + idx).classList.add('done');
     updateScanBtn();
@@ -408,13 +426,11 @@ function handlePhoto(event, idx) {
 
 function retakePhoto(idx) {
   images[idx] = null;
-  document.getElementById('photoInput' + idx).value = '';
-  document.getElementById('previewImg' + idx).classList.remove('show');
+  document.getElementById('cameraInput' + idx).value = '';
+  document.getElementById('galleryInput' + idx).value = '';
   document.getElementById('previewImg' + idx).src = '';
-  document.getElementById('cameraBtnDiv' + idx).classList.remove('has-image');
-  document.getElementById('camIcon' + idx).style.display = '';
-  document.getElementById('camText' + idx).style.display = '';
-  document.getElementById('retakeBtn' + idx).classList.remove('show');
+  document.getElementById('previewWrap' + idx).style.display = 'none';
+  document.getElementById('sourceBtns' + idx).style.display = 'flex';
   document.getElementById('slotStatus' + idx).textContent = '📷';
   document.getElementById('slot' + idx).classList.remove('done');
   document.getElementById('results').style.display = 'none';
