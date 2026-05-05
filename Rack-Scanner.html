@@ -462,7 +462,7 @@
 
 <script>
 // ─── STATE ────────────────────────────────────────────────
-let apiKey = sessionStorage.getItem('sda_api_key') || '';
+let apiKey = localStorage.getItem('sda_api_key') || '';
 let imageBase64 = null;
 let scanResult = null;
 
@@ -484,7 +484,7 @@ function saveApiKey() {
   const val = document.getElementById('apiKeyInput').value.trim();
   if (!val.startsWith('sk-')) { showToast('Key should start with sk-', 'error'); return; }
   apiKey = val;
-  sessionStorage.setItem('sda_api_key', val);
+  localStorage.setItem('sda_api_key', val);
   updateApiPill(true);
   document.getElementById('apiPanel').classList.remove('open');
   showToast('API key saved', 'success');
@@ -590,7 +590,7 @@ Notes:
         'anthropic-dangerous-direct-browser-access': 'true'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-5',
+        model: 'claude-haiku-4-5-20251001',
         max_tokens: 2000,
         messages: [{
           role: 'user',
