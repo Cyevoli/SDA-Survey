@@ -79,33 +79,58 @@
   .capture-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; font-family: var(--mono); margin-bottom: 6px; }
   .photo-hint { font-size: 12px; color: var(--muted); margin-bottom: 16px; line-height: 1.5; }
 
-  /* PHOTO SLOTS */
-  .photo-slot { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 10px; overflow: hidden; transition: border-color 0.2s; }
-  .photo-slot.done { border-color: rgba(34,197,94,0.35); }
-
-  .photo-slot-header { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-bottom: 1px solid var(--border); background: var(--surface2); }
-  .photo-slot-num { width: 26px; height: 26px; border-radius: 6px; background: var(--surface3); border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--muted); font-family: var(--mono); flex-shrink: 0; }
-  .photo-slot.done .photo-slot-num { background: var(--green-bg); border-color: rgba(34,197,94,0.3); color: var(--green); }
-  .photo-slot-info { flex: 1; min-width: 0; }
-  .photo-slot-title { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
-  .photo-slot-sub { font-size: 11px; color: var(--muted); line-height: 1.4; }
-  .photo-slot-status { font-size: 18px; flex-shrink: 0; }
-  .photo-slot-body { padding: 10px; }
-
+  /* MULTI-UPLOAD ZONE */
   input[type=file] { display: none; }
 
-  .camera-btn { width: 100%; background: var(--surface2); border: 1px dashed var(--border2); border-radius: 8px; padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; transition: all 0.2s; }
-  .camera-btn:active { transform: scale(0.98); }
-  .camera-btn.has-image { padding: 0; border-style: solid; border-color: var(--green); overflow: hidden; }
-  .camera-btn-icon { font-size: 22px; }
-  .camera-btn-text { font-size: 13px; font-weight: 600; color: var(--muted); }
+  .upload-zone {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden; margin-bottom: 10px;
+  }
+  .upload-source-row { display: flex; gap: 8px; padding: 10px; }
+  .upload-src-btn {
+    flex: 1; padding: 16px 8px; border-radius: 8px; text-align: center;
+    font-size: 13px; font-weight: 600; cursor: pointer; display: block;
+    transition: all 0.15s; border: 1px dashed var(--border2);
+    background: var(--surface2); color: var(--muted);
+  }
+  .upload-src-btn:active { transform: scale(0.97); }
+  .upload-src-btn.camera { border-color: rgba(79,142,247,0.35); color: var(--accent); }
+  .upload-src-btn.gallery { border-color: rgba(34,197,94,0.3); color: var(--green); }
 
-  .preview-img { width: 100%; border-radius: 7px; display: none; }
-  .preview-img.show { display: block; }
+  .upload-tips {
+    padding: 0 10px 10px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+  }
+  .upload-tip {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 10px;
+    font-size: 11px; color: var(--muted); line-height: 1.5;
+  }
+  .upload-tip strong { color: var(--text); display: block; margin-bottom: 2px; font-size: 11px; }
 
-  .camera-btn-wrap { position: relative; }
-  .retake-btn { position: absolute; top: 8px; right: 8px; background: rgba(8,11,18,0.85); backdrop-filter: blur(8px); border: 1px solid var(--border2); border-radius: 8px; padding: 5px 10px; font-size: 11px; font-weight: 600; color: var(--text); cursor: pointer; display: none; }
-  .retake-btn.show { display: block; }
+  /* THUMBNAIL GRID */
+  .thumb-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 6px; padding: 10px; 
+  }
+  .thumb-item {
+    position: relative; border-radius: 6px; overflow: hidden;
+    aspect-ratio: 1; background: var(--surface2);
+    border: 1px solid var(--border);
+  }
+  .thumb-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb-remove {
+    position: absolute; top: 3px; right: 3px; width: 18px; height: 18px;
+    background: rgba(8,11,18,0.9); border: none; border-radius: 50%;
+    color: var(--red); font-size: 11px; font-weight: 700;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    line-height: 1;
+  }
+  .thumb-count {
+    padding: 6px 10px 10px; font-size: 11px; font-family: var(--mono);
+    color: var(--muted); text-align: center;
+  }
+  .thumb-count.ready { color: var(--green); }
 
   /* PROGRESS + SCAN BTN */
   .photos-progress { font-size: 12px; font-family: var(--mono); color: var(--muted); text-align: center; margin: 12px 0 8px; }
@@ -186,28 +211,7 @@
   .rack-device-label { font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 600; }
   .rack-device-sublabel { font-family: 'JetBrains Mono', monospace; font-size: 9px; fill: #8892a8; }
 
-  /* SOURCE BUTTONS — Camera / Gallery */
-  .source-btns { display: flex; gap: 8px; }
-  input[type=file] { display: none; }
-  .source-btn {
-    flex: 1; padding: 14px 8px; border-radius: 8px;
-    border: 1px dashed var(--border2); background: var(--surface2);
-    font-size: 13px; font-weight: 600; color: var(--muted);
-    text-align: center; cursor: pointer; display: block;
-    transition: all 0.15s;
-  }
-  .source-btn:active { transform: scale(0.97); }
-  .camera-source { border-color: rgba(79,142,247,0.3); color: var(--accent); }
-  .gallery-source { border-color: var(--border2); }
-  .preview-wrap { position: relative; border-radius: 8px; overflow: hidden; margin-bottom: 0; }
-  .preview-img { width: 100%; display: block; border-radius: 8px; }
-  .retake-btn-inline {
-    position: absolute; top: 8px; right: 8px;
-    background: rgba(8,11,18,0.85); backdrop-filter: blur(8px);
-    border: 1px solid rgba(99,140,255,0.2); border-radius: 8px;
-    padding: 6px 12px; font-size: 12px; font-weight: 600;
-    color: #e8eeff; cursor: pointer;
-  }
+
 </style>
 </head>
 <body>
@@ -238,84 +242,33 @@
 
   <!-- CAPTURE ZONE -->
   <div class="capture-zone">
-    <div class="capture-label">Step 1 — Capture 3 rack photos</div>
-    <div class="photo-hint">All photos are sent to Claude together. More photos = better accuracy. At least 1 required.</div>
+    <div class="capture-label">Step 1 — Add rack photos (up to 8)</div>
+    <div class="photo-hint">Mix full rack, close-ups, and panel shots. More photos = better accuracy.</div>
 
-    <!-- SLOT 1: FULL RACK -->
-    <div class="photo-slot" id="slot0">
-      <div class="photo-slot-header">
-        <div class="photo-slot-num" id="slotNum0">1</div>
-        <div class="photo-slot-info">
-          <div class="photo-slot-title">Full Rack — Stand Back</div>
-          <div class="photo-slot-sub">Capture the entire rack top to bottom, shoot straight on</div>
-        </div>
-        <div class="photo-slot-status" id="slotStatus0">📷</div>
+    <div class="upload-zone">
+      <!-- SOURCE BUTTONS -->
+      <div class="upload-source-row">
+        <label for="cameraFileInput" class="upload-src-btn camera">📷 Take Photo</label>
+        <label for="galleryFileInput" class="upload-src-btn gallery">🖼 Add from Gallery</label>
+        <input type="file" id="cameraFileInput" accept="image/*" capture="environment" onchange="addPhotos(event)">
+        <input type="file" id="galleryFileInput" accept="image/*" multiple onchange="addPhotos(event)">
       </div>
-      <div class="photo-slot-body">
-        <div class="preview-wrap" id="previewWrap0" style="display:none">
-          <img class="preview-img" id="previewImg0" alt="Full rack">
-          <button class="retake-btn-inline" onclick="retakePhoto(0)">↺ Retake</button>
-        </div>
-        <div class="source-btns" id="sourceBtns0">
-          <label for="cameraInput0" class="source-btn camera-source">📷 Camera</label>
-          <label for="galleryInput0" class="source-btn gallery-source">🖼 Gallery</label>
-          <input type="file" id="cameraInput0" accept="image/*" capture="environment" onchange="handlePhoto(event,0)">
-          <input type="file" id="galleryInput0" accept="image/*" onchange="handlePhoto(event,0)">
-        </div>
+
+      <!-- PHOTO TIPS -->
+      <div class="upload-tips">
+        <div class="upload-tip"><strong>📐 Full rack</strong>Stand back, shoot straight on</div>
+        <div class="upload-tip"><strong>🔍 Top half</strong>Move in close, fill the frame</div>
+        <div class="upload-tip"><strong>🔍 Bottom half</strong>Move in close, fill the frame</div>
+        <div class="upload-tip"><strong>🏷 Front panels</strong>Close up on labels &amp; ports</div>
       </div>
+
+      <!-- THUMBNAIL GRID -->
+      <div class="thumb-grid" id="thumbGrid" style="display:none"></div>
+      <div class="thumb-count" id="thumbCount"></div>
     </div>
 
-    <!-- SLOT 2: TOP HALF -->
-    <div class="photo-slot" id="slot1">
-      <div class="photo-slot-header">
-        <div class="photo-slot-num" id="slotNum1">2</div>
-        <div class="photo-slot-info">
-          <div class="photo-slot-title">Top Half — Move Closer</div>
-          <div class="photo-slot-sub">Fill the frame with only the top half of the rack</div>
-        </div>
-        <div class="photo-slot-status" id="slotStatus1">📷</div>
-      </div>
-      <div class="photo-slot-body">
-        <div class="preview-wrap" id="previewWrap1" style="display:none">
-          <img class="preview-img" id="previewImg1" alt="Top half">
-          <button class="retake-btn-inline" onclick="retakePhoto(1)">↺ Retake</button>
-        </div>
-        <div class="source-btns" id="sourceBtns1">
-          <label for="cameraInput1" class="source-btn camera-source">📷 Camera</label>
-          <label for="galleryInput1" class="source-btn gallery-source">🖼 Gallery</label>
-          <input type="file" id="cameraInput1" accept="image/*" capture="environment" onchange="handlePhoto(event,1)">
-          <input type="file" id="galleryInput1" accept="image/*" onchange="handlePhoto(event,1)">
-        </div>
-      </div>
-    </div>
-
-    <!-- SLOT 3: BOTTOM HALF -->
-    <div class="photo-slot" id="slot2">
-      <div class="photo-slot-header">
-        <div class="photo-slot-num" id="slotNum2">3</div>
-        <div class="photo-slot-info">
-          <div class="photo-slot-title">Bottom Half — Move Closer</div>
-          <div class="photo-slot-sub">Fill the frame with only the bottom half of the rack</div>
-        </div>
-        <div class="photo-slot-status" id="slotStatus2">📷</div>
-      </div>
-      <div class="photo-slot-body">
-        <div class="preview-wrap" id="previewWrap2" style="display:none">
-          <img class="preview-img" id="previewImg2" alt="Bottom half">
-          <button class="retake-btn-inline" onclick="retakePhoto(2)">↺ Retake</button>
-        </div>
-        <div class="source-btns" id="sourceBtns2">
-          <label for="cameraInput2" class="source-btn camera-source">📷 Camera</label>
-          <label for="galleryInput2" class="source-btn gallery-source">🖼 Gallery</label>
-          <input type="file" id="cameraInput2" accept="image/*" capture="environment" onchange="handlePhoto(event,2)">
-          <input type="file" id="galleryInput2" accept="image/*" onchange="handlePhoto(event,2)">
-        </div>
-      </div>
-    </div>
-
-    <div class="photos-progress" id="photosProgress">0 of 3 photos taken — take at least 1 to scan</div>
     <button class="scan-btn" id="scanBtn" onclick="startScan()" disabled>
-      <span>📷</span> Take at least 1 photo first
+      <span>📷</span> Add photos to scan
     </button>
   </div>
 
@@ -371,7 +324,7 @@
 <script>
 // ─── STATE ────────────────────────────────────────────────
 let apiKey = localStorage.getItem('sda_api_key') || '';
-let images = [null, null, null];
+let images = []; // array of base64 strings, up to 8
 let scanResult = null;
 
 // ─── INIT ─────────────────────────────────────────────────
@@ -407,118 +360,133 @@ function updateApiPill(set) {
 }
 
 // ─── PHOTO HANDLING ───────────────────────────────────────
-function handlePhoto(event, idx) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    images[idx] = e.target.result.split(',')[1];
-    const img = document.getElementById('previewImg' + idx);
-    img.src = e.target.result;
-    document.getElementById('previewWrap' + idx).style.display = 'block';
-    document.getElementById('sourceBtns' + idx).style.display = 'none';
-    document.getElementById('slotStatus' + idx).textContent = '✅';
-    document.getElementById('slot' + idx).classList.add('done');
-    updateScanBtn();
-  };
-  reader.readAsDataURL(file);
+function addPhotos(event) {
+  const files = Array.from(event.target.files);
+  if (!files.length) return;
+  const remaining = 8 - images.length;
+  const toAdd = files.slice(0, remaining);
+  let loaded = 0;
+  toAdd.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      images.push(e.target.result.split(',')[1]);
+      loaded++;
+      if (loaded === toAdd.length) renderThumbs();
+    };
+    reader.readAsDataURL(file);
+  });
+  event.target.value = ''; // reset so same file can be re-added
 }
 
-function retakePhoto(idx) {
-  images[idx] = null;
-  document.getElementById('cameraInput' + idx).value = '';
-  document.getElementById('galleryInput' + idx).value = '';
-  document.getElementById('previewImg' + idx).src = '';
-  document.getElementById('previewWrap' + idx).style.display = 'none';
-  document.getElementById('sourceBtns' + idx).style.display = 'flex';
-  document.getElementById('slotStatus' + idx).textContent = '📷';
-  document.getElementById('slot' + idx).classList.remove('done');
+function removePhoto(idx) {
+  images.splice(idx, 1);
+  renderThumbs();
   document.getElementById('results').style.display = 'none';
   document.getElementById('results').classList.remove('show');
-  updateScanBtn();
 }
 
-function updateScanBtn() {
-  const taken = images.filter(Boolean).length;
+function renderThumbs() {
+  const grid = document.getElementById('thumbGrid');
+  const count = document.getElementById('thumbCount');
   const btn = document.getElementById('scanBtn');
-  const prog = document.getElementById('photosProgress');
+
+  if (images.length === 0) {
+    grid.style.display = 'none';
+    count.textContent = '';
+    count.className = 'thumb-count';
+    btn.disabled = !apiKey ? true : true;
+    btn.innerHTML = '<span>📷</span> Add photos to scan';
+    return;
+  }
+
+  grid.style.display = 'grid';
+  grid.innerHTML = images.map((img, i) => `
+    <div class="thumb-item">
+      <img src="data:image/jpeg;base64,${img}" alt="Photo ${i+1}">
+      <button class="thumb-remove" onclick="removePhoto(${i})">✕</button>
+    </div>`).join('');
+
+  const n = images.length;
+  count.textContent = n + ' photo' + (n>1?'s':'') + ' added' + (n >= 8 ? ' (max)' : ' — add more for better accuracy');
+  count.className = 'thumb-count' + (n >= 4 ? ' ready' : '');
 
   if (!apiKey) {
     btn.disabled = true;
     btn.innerHTML = '<span>🔑</span> Set API key first';
-    prog.textContent = taken + ' of 3 photos taken';
-    prog.className = 'photos-progress';
-    return;
-  }
-
-  if (taken === 0) {
-    prog.textContent = '0 of 3 photos taken — take at least 1 to scan';
-    prog.className = 'photos-progress';
-    btn.disabled = true;
-    btn.innerHTML = '<span>📷</span> Take at least 1 photo first';
-  } else if (taken < 3) {
-    prog.textContent = taken + ' of 3 photos taken — more photos = better accuracy';
-    prog.className = 'photos-progress';
-    btn.disabled = false;
-    btn.innerHTML = '<span>🔍</span> Scan ' + taken + ' photo' + (taken > 1 ? 's' : '') + ' with Claude AI';
   } else {
-    prog.textContent = '3 of 3 photos taken — ready to scan!';
-    prog.className = 'photos-progress ready';
     btn.disabled = false;
-    btn.innerHTML = '<span>🔍</span> Scan 3 photos with Claude AI';
+    btn.innerHTML = '<span>🔍</span> Scan ' + n + ' photo' + (n>1?'s':'') + ' with Claude AI';
   }
+}
+
+function updateScanBtn() {
+  renderThumbs();
 }
 
 // ─── SCAN ─────────────────────────────────────────────────
 async function startScan() {
-  const activeImages = images.filter(Boolean);
+  const activeImages = images;
   if (!activeImages.length || !apiKey) return;
 
   document.getElementById('scanOverlay').classList.add('show');
   document.getElementById('results').classList.remove('show');
   document.getElementById('results').style.display = 'none';
   document.getElementById('scanBtn').disabled = true;
-  document.getElementById('scanPhotoCount').textContent = activeImages.length;
+  document.getElementById('scanPhotoCount').textContent = images.length;
 
   // Build content array with all photos
   const content = [];
-  const labels = ['Full rack overview', 'Top half close-up', 'Bottom half close-up'];
   images.forEach((img, i) => {
-    if (!img) return;
-    content.push({ type: 'text', text: 'Photo ' + (i+1) + ': ' + labels[i] });
+    content.push({ type: 'text', text: 'Photo ' + (i+1) + ' of ' + images.length });
     content.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: img } });
   });
 
-  content.push({ type: 'text', text: `You are a network infrastructure expert. You have been given ${activeImages.length} photo(s) of the same network rack from different distances/angles. Use ALL photos together to identify every piece of equipment.
+  content.push({ type: 'text', text: `You are a senior network infrastructure engineer with deep expertise in identifying rack-mounted equipment by visual inspection. You have been given ${images.length} photo(s) of a network rack. Analyze ALL photos together cross-referencing them to build the most complete and accurate inventory possible.
 
-IMPORTANT: Be aggressive about identifying devices. If you see rows of ports, it is a switch or patch panel. If unsure, include the device at low confidence rather than skipping it. Count every visible piece of equipment across all photos.
+FRONT PANEL IDENTIFICATION — use these visual cues:
+- Read ALL visible text: vendor logos, model numbers, serial labels, port labels, LED labels
+- Port density: 48 ports in 1U = likely Cisco Catalyst 2960X-48 or similar; 24 ports = 2960-24; SFP ports on right side = uplinks
+- LED arrays: rows of small LEDs = switch or patch panel port indicators
+- Form factor: thin 1U with keystone jacks = patch panel; thin 1U with RJ45 rows = copper patch; thin with LC/SC ports = fiber patch panel
+- Fiber trays: flat panels with LC/SC duplex ports, usually wall or rack mounted, NOT cable management — label as fiber_panel
+- Cable management: horizontal panels with D-rings or finger ducts only, NOT fiber trays
+- UPS: large heavy units, usually 2U+, with battery indicators and output sockets
+- Firewall/router: look for console ports, management ports, vendor logos like Cisco, Fortinet, Palo Alto, Juniper, pfSense
 
-Return ONLY valid JSON (no markdown, no explanation):
+U POSITION RULES — always provide a best estimate:
+- Count rack unit markings visible on the rack rails (small numbers on the side)
+- If rail markings not visible, estimate from relative position in the rack
+- Use the full rack overview photo to establish total rack size, then close-up photos to pinpoint positions
+- NEVER return null for u_position — always give your best estimate and mark confidence accordingly
+- U1 = bottom of rack, highest U number = top of rack
+
+Return ONLY valid JSON (no markdown, no explanation, no preamble):
 {
-  "rack_units_total": <number or null>,
+  "rack_units_total": <number, estimate if not visible>,
   "rack_units_used": <number>,
   "overall_confidence": "high" | "medium" | "low",
   "devices": [
     {
-      "u_position": <number or null>,
+      "u_position": <number — REQUIRED, always estimate>,
       "u_size": <number, default 1>,
       "type": "switch" | "patch_panel" | "ups" | "server" | "router" | "firewall" | "ap_controller" | "pdu" | "cable_management" | "fiber_panel" | "modem" | "other",
-      "vendor": "<string or null>",
-      "model": "<string or null>",
+      "vendor": "<string — read from label if visible, otherwise best guess from form factor>",
+      "model": "<string — read from label if visible, otherwise null>",
       "ports": <number or null>,
-      "notes": "<short string>",
+      "notes": "<what you see: port types, visible labels, LED state, cable density>",
       "confidence": "high" | "medium" | "low"
     }
   ],
-  "warnings": ["<string>"],
-  "observations": "<2-3 sentences on cable management, rack organization, concerns, notable equipment>"
+  "warnings": ["<anything that could affect a network upgrade: no UPS, full rack, excessive cable clutter, unlabeled cables, heat concerns, aged equipment>"],
+  "observations": "<3-4 sentences: overall rack condition, cable management quality, equipment age/mix, anything notable for a field engineer planning an upgrade>"
 }
 
-Rules:
-- List devices top to bottom (highest U first)
-- Include ALL visible devices even with low confidence
-- warnings = anything affecting a network upgrade (no UPS, full rack, cable issues, heat risks)
-- Be specific on vendor/model if labels are readable, otherwise null` });
+Critical rules:
+- List devices top to bottom (highest U number first)
+- Include EVERY visible device — never skip something just because you are uncertain
+- Do NOT label fiber trays or wall-mounted patch panels as cable_management
+- Always provide u_position — use low confidence if estimating
+- Distinguish between fiber_panel (has LC/SC fiber ports) and patch_panel (has RJ45 copper ports)` });
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -563,7 +531,7 @@ function renderResults(data) {
   resultsEl.classList.add('show');
 
   const taken = images.filter(Boolean).length;
-  document.getElementById('scanBtn').innerHTML = '<span>🔄</span> Re-scan ' + taken + ' photo' + (taken > 1 ? 's' : '');
+  document.getElementById('scanBtn').innerHTML = '<span>🔄</span> Re-scan ' + images.length + ' photo' + (images.length > 1 ? 's' : '');
 
   const confPill = document.getElementById('overallConfPill');
   confPill.textContent = (data.overall_confidence || 'medium').toUpperCase();
