@@ -662,74 +662,432 @@ function formatDeviceName(d) {
   return d.type.replace(/_/g,' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
-// ─── SVG RACK DIAGRAM ─────────────────────────────────────
+// ─── SVG RACK DIAGRAM WITH STENCILS ──────────────────────
 function renderRackSVG(data) {
   const devices = data.devices || [];
-  const totalU = data.rack_units_total || Math.max(12, (data.rack_units_used || 0) + 2);
-  const UH = 22, LEFT = 36, W = 320, PAD = 10;
-  const HEIGHT = totalU * UH + PAD * 2;
+  const totalU = rackSize > 0 ? rackSize : (data.rack_units_total || Math.max(12, (data.rack_units_used||0)+2));
+  const UH = 26, LEFT = 38, W = 330, PAD = 10;
   const SVG_W = LEFT + W + PAD;
+  const HEIGHT = totalU * UH + PAD * 2;
 
-  const typeColor = {
-    switch:           { fill: '#1a2a4a', stroke: '#4f8ef7', label: '#a8c4ff' },
-    patch_panel:      { fill: '#1a2a1a', stroke: '#22c55e', label: '#86efac' },
-    fiber_panel:      { fill: '#1a2a1a', stroke: '#06b6d4', label: '#67e8f9' },
-    ups:              { fill: '#2a2a1a', stroke: '#f59e0b', label: '#fcd34d' },
-    server:           { fill: '#2a1a2a', stroke: '#a78bfa', label: '#c4b5fd' },
-    router:           { fill: '#1a2a4a', stroke: '#60a5fa', label: '#93c5fd' },
-    firewall:         { fill: '#2a1a1a', stroke: '#ef4444', label: '#fca5a5' },
-    ap_controller:    { fill: '#1a2a2a', stroke: '#06b6d4', label: '#67e8f9' },
-    pdu:              { fill: '#2a2a2a', stroke: '#9ca3af', label: '#d1d5db' },
-    cable_management: { fill: '#1a1a1a', stroke: '#374151', label: '#6b7280' },
-    modem:            { fill: '#1a2a1a', stroke: '#34d399', label: '#6ee7b7' },
-    other:            { fill: '#161d2e', stroke: '#2a3a5a', label: '#4a5568' },
-  };
-
+  // Place unpositioned devices
   const deviceMap = {};
   devices.forEach(d => { if (d.u_position) deviceMap[d.u_position] = d; });
-  const unplaced = devices.filter(d => !d.u_position && d.type !== 'other');
   let nextU = totalU;
-  unplaced.forEach(d => {
+  devices.filter(d => !d.u_position && d.type !== 'other').forEach(d => {
     while (deviceMap[nextU] && nextU > 0) nextU--;
     if (nextU > 0) { d.u_position = nextU; deviceMap[nextU] = d; nextU--; }
   });
 
-  let svg = `<svg viewBox="0 0 ${SVG_W} ${HEIGHT + PAD}" xmlns="http://www.w3.org/2000/svg">
-  <defs><linearGradient id="rackBg" x1="0" y1="0" x2="1" y2="0">
-    <stop offset="0%" stop-color="#0a0f1a"/><stop offset="100%" stop-color="#0f1a2a"/>
-  </linearGradient></defs>
-  <rect x="${LEFT}" y="${PAD}" width="${W}" height="${totalU*UH}" fill="url(#rackBg)" stroke="rgba(99,140,255,0.2)" stroke-width="1" rx="3"/>`;
+  // ── DEFS ──
+  let defs = `<defs>
+    <linearGradient id="rackBg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0d1117"/><stop offset="100%" stop-color="#080b12"/>
+    </linearGradient>
+    <linearGradient id="rackRail" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#1e2535"/><stop offset="50%" stop-color="#2a3550"/><stop offset="100%" stop-color="#1e2535"/>
+    </linearGradient>
+    <linearGradient id="ledGreen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4ade80"/><stop offset="100%" stop-color="#16a34a"/>
+    </linearGradient>
+    <linearGradient id="ledAmber" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fbbf24"/><stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="1.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>`;
 
+  let svg = `<svg viewBox="0 0 ${SVG_W} ${HEIGHT+PAD}" xmlns="http://www.w3.org/2000/svg">${defs}`;
+
+  // ── RACK CABINET ──
+  // Side rails
+  svg += `<rect x="${LEFT}" y="${PAD}" width="6" height="${totalU*UH}" fill="url(#rackRail)" rx="1"/>`;
+  svg += `<rect x="${LEFT+W-6}" y="${PAD}" width="6" height="${totalU*UH}" fill="url(#rackRail)" rx="1"/>`;
+  // Interior background
+  svg += `<rect x="${LEFT+6}" y="${PAD}" width="${W-12}" height="${totalU*UH}" fill="url(#rackBg)"/>`;
+
+  // U guides + rail numbers
   for (let u = 1; u <= totalU; u++) {
     const y = PAD + (totalU - u) * UH;
-    svg += `<text x="${LEFT-4}" y="${y+UH/2+3}" text-anchor="end" class="rack-unit-label">${u}U</text>`;
-    svg += `<line x1="${LEFT}" y1="${y+UH}" x2="${LEFT+W}" y2="${y+UH}" stroke="rgba(99,140,255,0.08)" stroke-width="0.5"/>`;
+    // U label on left
+    svg += `<text x="${LEFT-4}" y="${y+UH/2+3.5}" text-anchor="end" font-family="JetBrains Mono,monospace" font-size="8" fill="#3a4a6a">${u}</text>`;
+    // Rail unit holes (decorative)
+    svg += `<circle cx="${LEFT+3}" cy="${y+UH/2}" r="1.5" fill="#0a0f1a" stroke="#2a3550" stroke-width="0.5"/>`;
+    svg += `<circle cx="${LEFT+W-3}" cy="${y+UH/2}" r="1.5" fill="#0a0f1a" stroke="#2a3550" stroke-width="0.5"/>`;
+    // Subtle row divider
+    if (u < totalU) svg += `<line x1="${LEFT+6}" y1="${y+UH}" x2="${LEFT+W-6}" y2="${y+UH}" stroke="rgba(99,140,255,0.06)" stroke-width="0.5"/>`;
   }
 
+  // ── DEVICE STENCILS ──
   const rendered = new Set();
   devices.forEach(d => {
     if (!d.u_position || rendered.has(d.u_position)) return;
     const size = d.u_size || 1;
-    const y = PAD + (totalU - d.u_position - size + 1) * UH;
+    const x = LEFT + 7;
+    const y = PAD + (totalU - d.u_position - size + 1) * UH + 1;
+    const w = W - 14;
     const h = size * UH - 2;
-    const colors = typeColor[d.type] || typeColor.other;
-    const name = formatDeviceName(d);
-    const shortName = name.length > 32 ? name.slice(0,30) + '…' : name;
-    svg += `<rect x="${LEFT+2}" y="${y+1}" width="${W-4}" height="${h}" fill="${colors.fill}" stroke="${colors.stroke}" stroke-width="1" rx="2"/>`;
-    svg += `<text x="${LEFT+12}" y="${y+(h/2)+(size>1?-4:4)}" class="rack-device-label" fill="${colors.label}">${shortName}</text>`;
-    if (size > 1) svg += `<text x="${LEFT+12}" y="${y+h/2+12}" class="rack-device-sublabel">${d.type.replace(/_/g,' ')}${d.ports?' · '+d.ports+'p':''}</text>`;
-    if ((d.type==='switch'||d.type==='patch_panel') && d.ports) {
-      const maxDots = Math.min(d.ports, 48);
-      const startX = LEFT + W - 14 - (maxDots * 6);
-      for (let i = 0; i < maxDots; i++) {
-        svg += `<circle cx="${startX+i*6}" cy="${y+h/2}" r="2.5" fill="${colors.stroke}" opacity="0.6"/>`;
-      }
-    }
+    svg += drawStencil(d, x, y, w, h);
     for (let s = 0; s < size; s++) rendered.add(d.u_position + s);
   });
 
   svg += `</svg>`;
   document.getElementById('rackSVGWrap').innerHTML = svg;
+}
+
+// ── STENCIL RENDERER ──────────────────────────────────────
+function drawStencil(d, x, y, w, h) {
+  const type = d.type || 'other';
+  const vendor = (d.vendor || '').toLowerCase();
+  const ports = d.ports || 0;
+  const name = formatDeviceName(d);
+  const shortName = name.length > 34 ? name.slice(0,32)+'…' : name;
+
+  // Vendor-accurate body colors
+  const bodyColor = vendorBodyColor(vendor, type);
+  const accentColor = typeAccentColor(type);
+  const textColor = bodyColor.textDark ? '#1a1a1a' : '#e8eeff';
+  const mutedColor = bodyColor.textDark ? '#444' : '#8892a8';
+
+  let s = '';
+
+  // ── CHASSIS BASE ──
+  s += `<defs>
+    <linearGradient id="chassis_${x}_${y}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${bodyColor.top}"/>
+      <stop offset="100%" stop-color="${bodyColor.bot}"/>
+    </linearGradient>
+  </defs>`;
+  s += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="url(#chassis_${x}_${y})" stroke="${accentColor}" stroke-width="0.8" rx="2"/>`;
+
+  // Type-specific front panel layout
+  if (type === 'switch' || type === 'router') {
+    s += drawSwitchStencil(d, x, y, w, h, bodyColor, accentColor, textColor, mutedColor, shortName);
+  } else if (type === 'patch_panel') {
+    s += drawPatchPanelStencil(d, x, y, w, h, bodyColor, accentColor, textColor, mutedColor, shortName);
+  } else if (type === 'fiber_panel') {
+    s += drawFiberPanelStencil(d, x, y, w, h, bodyColor, accentColor, textColor, mutedColor, shortName);
+  } else if (type === 'firewall') {
+    s += drawFirewallStencil(d, x, y, w, h, bodyColor, accentColor, textColor, mutedColor, shortName);
+  } else if (type === 'ups') {
+    s += drawUPSStencil(d, x, y, w, h, bodyColor, accentColor, textColor, mutedColor, shortName);
+  } else if (type === 'server') {
+    s += drawServerStencil(d, x, y, w, h, bodyColor, accentColor, textColor, mutedColor, shortName);
+  } else if (type === 'pdu') {
+    s += drawPDUStencil(d, x, y, w, h, bodyColor, accentColor, textColor, mutedColor, shortName);
+  } else if (type === 'cable_management') {
+    s += drawCableMgmtStencil(x, y, w, h, accentColor, mutedColor);
+  } else {
+    s += drawGenericStencil(x, y, w, h, textColor, mutedColor, accentColor, shortName, type);
+  }
+
+  return s;
+}
+
+function vendorBodyColor(vendor, type) {
+  if (vendor.includes('cisco'))    return { top:'#2a2e36', bot:'#1e2228', textDark:false };
+  if (vendor.includes('fortinet')) return { top:'#2a1a0e', bot:'#1e1208', textDark:false };
+  if (vendor.includes('palo'))     return { top:'#1a1a2e', bot:'#12121e', textDark:false };
+  if (vendor.includes('juniper'))  return { top:'#0e2a1a', bot:'#081e12', textDark:false };
+  if (vendor.includes('aruba') || vendor.includes('hp') || vendor.includes('hpe'))
+                                   return { top:'#2a1e0e', bot:'#1e1608', textDark:false };
+  if (vendor.includes('netgear'))  return { top:'#1a2a1e', bot:'#121e16', textDark:false };
+  if (vendor.includes('ubiquiti') || vendor.includes('unifi'))
+                                   return { top:'#0e1e2e', bot:'#08121e', textDark:false };
+  if (type === 'ups')              return { top:'#2a2a1a', bot:'#1e1e12', textDark:false };
+  if (type === 'patch_panel')      return { top:'#1e2a1e', bot:'#141e14', textDark:false };
+  if (type === 'fiber_panel')      return { top:'#0e1e2a', bot:'#081418', textDark:false };
+  if (type === 'firewall')         return { top:'#2a1a1a', bot:'#1e1212', textDark:false };
+  if (type === 'server')           return { top:'#2a2a2e', bot:'#1e1e22', textDark:false };
+  return { top:'#1e2535', bot:'#141929', textDark:false };
+}
+
+function typeAccentColor(type) {
+  const map = {
+    switch:'#4f8ef7', patch_panel:'#22c55e', fiber_panel:'#06b6d4',
+    ups:'#f59e0b', server:'#a78bfa', router:'#60a5fa',
+    firewall:'#ef4444', ap_controller:'#06b6d4', pdu:'#9ca3af',
+    cable_management:'#374151', modem:'#34d399', other:'#3a4a6a'
+  };
+  return map[type] || '#4f8ef7';
+}
+
+// ── SWITCH / ROUTER STENCIL ──
+function drawSwitchStencil(d, x, y, w, h, bc, ac, tc, mc, name) {
+  let s = '';
+  const vendor = (d.vendor||'').toLowerCase();
+  const ports = d.ports || 24;
+  const isCisco = vendor.includes('cisco');
+
+  // Left vendor stripe
+  const stripeW = 18;
+  s += `<rect x="${x}" y="${y}" width="${stripeW}" height="${h}" fill="${ac}" opacity="0.15" rx="2"/>`;
+
+  // Vendor logo area
+  if (isCisco) {
+    // Cisco bridge arch logo (simplified)
+    const cx = x + stripeW/2, cy = y + h/2;
+    s += `<text x="${cx}" y="${cy+3}" text-anchor="middle" font-family="Arial,sans-serif" font-size="5" font-weight="900" fill="${ac}" opacity="0.9">CISCO</text>`;
+  } else {
+    s += `<text x="${x+stripeW/2}" y="${y+h/2+3}" text-anchor="middle" font-family="Arial,sans-serif" font-size="5" font-weight="700" fill="${ac}" opacity="0.8">${(d.vendor||'').slice(0,4).toUpperCase()}</text>`;
+  }
+
+  // Model label
+  s += `<text x="${x+stripeW+6}" y="${y+8}" font-family="DM Sans,sans-serif" font-size="7" font-weight="700" fill="${tc}">${name}</text>`;
+
+  // Port section — right portion
+  const portAreaX = x + stripeW + 4;
+  const portAreaW = w - stripeW - 60; // leave room for status LEDs on right
+  const maxPortsToShow = Math.min(ports, 48);
+  const portW = Math.min(10, Math.floor((portAreaW - 8) / maxPortsToShow) - 1);
+  const portH = Math.min(h - 10, 10);
+  const portY = y + h/2 - portH/2;
+  const totalPortW = maxPortsToShow * (portW + 1) - 1;
+  const portStartX = portAreaX + 4;
+
+  // Port group background
+  s += `<rect x="${portStartX-2}" y="${portY-2}" width="${totalPortW+4}" height="${portH+4}" fill="#0a0f1a" rx="2" opacity="0.6"/>`;
+
+  for (let i = 0; i < maxPortsToShow; i++) {
+    const px = portStartX + i * (portW + 1);
+    // Alternate LED on/off for realism
+    const active = Math.random() > 0.3;
+    const ledColor = active ? (Math.random() > 0.15 ? '#22c55e' : '#f59e0b') : '#1a2535';
+    s += `<rect x="${px}" y="${portY}" width="${portW}" height="${portH}" fill="#0d1520" stroke="#1e2a3a" stroke-width="0.5" rx="1"/>`;
+    s += `<rect x="${px+1}" y="${portY+portH-3}" width="${portW-2}" height="2" fill="${ledColor}" opacity="0.9" rx="0.5"/>`;
+  }
+
+  if (ports > 48) {
+    s += `<text x="${portStartX + totalPortW + 4}" y="${portY+portH/2+3}" font-family="JetBrains Mono,monospace" font-size="6" fill="${mc}">+${ports-48}</text>`;
+  }
+
+  // Right status panel
+  const statusX = x + w - 52;
+  s += `<rect x="${statusX}" y="${y+2}" width="48" height="${h-4}" fill="#0a0f1a" opacity="0.5" rx="2"/>`;
+  // SFP uplink ports
+  s += `<text x="${statusX+4}" y="${y+8}" font-family="JetBrains Mono,monospace" font-size="5" fill="${mc}">UPLINK</text>`;
+  for (let i = 0; i < 2; i++) {
+    const ux = statusX + 4 + i * 20;
+    const uy = y + 10;
+    s += `<rect x="${ux}" y="${uy}" width="16" height="8" fill="#0d1520" stroke="${ac}" stroke-width="0.5" rx="1"/>`;
+    s += `<rect x="${ux+1}" y="${uy+1}" width="14" height="6" fill="#0a1020" rx="0.5"/>`;
+    s += `<circle cx="${ux+8}" cy="${uy+4}" r="2" fill="${ac}" opacity="0.7"/>`;
+  }
+  // Console port
+  s += `<text x="${statusX+4}" y="${y+h-10}" font-family="JetBrains Mono,monospace" font-size="5" fill="${mc}">MGMT</text>`;
+  s += `<rect x="${statusX+4}" y="${y+h-8}" width="10" height="5" fill="#0d1520" stroke="${mc}" stroke-width="0.5" rx="1"/>`;
+  // Power LED
+  s += `<circle cx="${x+w-6}" cy="${y+h/2}" r="2.5" fill="#22c55e" filter="url(#glow)" opacity="0.9"/>`;
+
+  return s;
+}
+
+// ── PATCH PANEL STENCIL ──
+function drawPatchPanelStencil(d, x, y, w, h, bc, ac, tc, mc, name) {
+  let s = '';
+  const ports = d.ports || 24;
+  const maxPorts = Math.min(ports, 48);
+  const portW = Math.floor((w - 40) / maxPorts) - 1;
+  const portH = Math.min(h - 8, 12);
+  const portY = y + h/2 - portH/2;
+  const portStartX = x + 8;
+
+  // Label strip at top
+  s += `<rect x="${x}" y="${y}" width="${w}" height="5" fill="${ac}" opacity="0.4"/>`;
+  s += `<text x="${x+6}" y="${y+3.5}" font-family="JetBrains Mono,monospace" font-size="4" fill="${tc}" font-weight="700">${name.toUpperCase()}</text>`;
+
+  // Port group bg
+  s += `<rect x="${portStartX-2}" y="${portY-2}" width="${maxPorts*(portW+1)+2}" height="${portH+4}" fill="#0a0f1a" rx="2" opacity="0.7"/>`;
+
+  for (let i = 0; i < maxPorts; i++) {
+    const px = portStartX + i * (portW + 1);
+    // RJ45 port
+    s += `<rect x="${px}" y="${portY}" width="${portW}" height="${portH}" fill="#141e2a" stroke="${ac}" stroke-width="0.4" rx="1"/>`;
+    // Port number label
+    if (portW >= 6) {
+      s += `<text x="${px + portW/2}" y="${portY+portH+5}" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="4" fill="${mc}">${i+1}</text>`;
+    }
+    // Locking tab at bottom of port
+    s += `<rect x="${px+portW*0.2}" y="${portY+portH-1}" width="${portW*0.6}" height="2" fill="${ac}" opacity="0.3" rx="0.5"/>`;
+  }
+
+  // Right side - patch panel ID label
+  s += `<text x="${x+w-6}" y="${y+h/2+3}" text-anchor="end" font-family="JetBrains Mono,monospace" font-size="6" fill="${ac}" font-weight="700">${ports}P</text>`;
+
+  return s;
+}
+
+// ── FIBER PANEL STENCIL ──
+function drawFiberPanelStencil(d, x, y, w, h, bc, ac, tc, mc, name) {
+  let s = '';
+  const ports = d.ports || 12;
+  const maxPorts = Math.min(ports, 24);
+  const portW = 10, portH = Math.min(h-10, 10);
+  const portY = y + h/2 - portH/2;
+  const portStartX = x + 20;
+  const spacing = Math.min(14, Math.floor((w - 50) / maxPorts));
+
+  s += `<rect x="${x}" y="${y}" width="${w}" height="4" fill="${ac}" opacity="0.5"/>`;
+  s += `<text x="${x+6}" y="${y+3}" font-family="JetBrains Mono,monospace" font-size="4" fill="${tc}" font-weight="700">FIBER PATCH PANEL — ${name}</text>`;
+
+  // LC duplex ports
+  for (let i = 0; i < maxPorts; i++) {
+    const px = portStartX + i * spacing;
+    // LC duplex — two small circles side by side
+    s += `<rect x="${px-1}" y="${portY-1}" width="${portW+2}" height="${portH+2}" fill="#0a0f1a" stroke="${ac}" stroke-width="0.4" rx="2"/>`;
+    s += `<circle cx="${px+3}" cy="${portY+portH/2}" r="2.5" fill="#0d1520" stroke="${ac}" stroke-width="0.6"/>`;
+    s += `<circle cx="${px+7}" cy="${portY+portH/2}" r="2.5" fill="#0d1520" stroke="${ac}" stroke-width="0.6"/>`;
+    // Fiber color band
+    const fiberColors = ['#f59e0b','#3b82f6','#22c55e','#ef4444','#a78bfa','#06b6d4','#f97316','#84cc16'];
+    s += `<rect x="${px}" y="${portY+portH-2}" width="${portW}" height="2" fill="${fiberColors[i%8]}" opacity="0.8" rx="0.5"/>`;
+  }
+
+  s += `<text x="${x+w-6}" y="${y+h/2+3}" text-anchor="end" font-family="JetBrains Mono,monospace" font-size="6" fill="${ac}" font-weight="700">${ports}F</text>`;
+  return s;
+}
+
+// ── FIREWALL STENCIL ──
+function drawFirewallStencil(d, x, y, w, h, bc, ac, tc, mc, name) {
+  let s = '';
+  const vendor = (d.vendor||'').toLowerCase();
+
+  // Vendor accent stripe
+  s += `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${ac}" opacity="0.06" rx="2"/>`;
+  s += `<rect x="${x}" y="${y}" width="4" height="${h}" fill="${ac}" opacity="0.7" rx="2"/>`;
+
+  // Vendor label
+  const vendorLabel = vendor.includes('fortinet') ? 'FortiGate' : vendor.includes('palo') ? 'Palo Alto' : vendor.includes('cisco') ? 'Cisco ASA' : (d.vendor||'Firewall');
+  s += `<text x="${x+10}" y="${y+h/2-3}" font-family="DM Sans,sans-serif" font-size="8" font-weight="700" fill="${ac}">${vendorLabel}</text>`;
+  s += `<text x="${x+10}" y="${y+h/2+8}" font-family="JetBrains Mono,monospace" font-size="6" fill="${mc}">${d.model||''}</text>`;
+
+  // Interface ports on right
+  const numPorts = 6;
+  const portW = 12, portH = 8;
+  const portStartX = x + w - (numPorts * (portW+3)) - 10;
+  const portY = y + h/2 - portH/2;
+  for (let i = 0; i < numPorts; i++) {
+    const px = portStartX + i * (portW+3);
+    s += `<rect x="${px}" y="${portY}" width="${portW}" height="${portH}" fill="#0a0f1a" stroke="${ac}" stroke-width="0.5" rx="1"/>`;
+    s += `<text x="${px+portW/2}" y="${portY+portH+5}" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="4" fill="${mc}">e${i}</text>`;
+    // Status LED
+    s += `<circle cx="${px+portW/2}" cy="${portY+3}" r="1.5" fill="${i===0?'#22c55e':i===1?'#22c55e':'#1a2535'}" opacity="0.9"/>`;
+  }
+
+  // Power/status LEDs far right
+  s += `<circle cx="${x+w-6}" cy="${y+h/2-4}" r="2" fill="#22c55e" filter="url(#glow)" opacity="0.9"/>`;
+  s += `<circle cx="${x+w-6}" cy="${y+h/2+4}" r="2" fill="${ac}" opacity="0.6"/>`;
+
+  return s;
+}
+
+// ── UPS STENCIL ──
+function drawUPSStencil(d, x, y, w, h, bc, ac, tc, mc, name) {
+  let s = '';
+
+  // Battery bar graphic
+  const batW = 40, batH = h - 12;
+  const batX = x + 8, batY = y + 6;
+  s += `<rect x="${batX}" y="${batY}" width="${batW}" height="${batH}" fill="#0a0f1a" stroke="${ac}" stroke-width="1" rx="3"/>`;
+  s += `<rect x="${batX+batW/2-4}" y="${batY-3}" width="8" height="3" fill="${ac}" rx="1"/>`;
+  // Battery fill - 80%
+  const fillH = (batH - 4) * 0.8;
+  s += `<rect x="${batX+2}" y="${batY+batH-2-fillH}" width="${batW-4}" height="${fillH}" fill="${ac}" opacity="0.5" rx="2"/>`;
+  s += `<text x="${batX+batW/2}" y="${batY+batH/2+4}" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="7" fill="${tc}" font-weight="700">80%</text>`;
+
+  // Model label
+  s += `<text x="${batX+batW+10}" y="${y+h/2-4}" font-family="DM Sans,sans-serif" font-size="8" font-weight="700" fill="${tc}">${name}</text>`;
+  s += `<text x="${batX+batW+10}" y="${y+h/2+8}" font-family="JetBrains Mono,monospace" font-size="6" fill="${mc}">ONLINE · UTILITY</text>`;
+
+  // Output receptacles
+  const recX = x + w - 70;
+  for (let i = 0; i < 4; i++) {
+    const rx = recX + i * 16;
+    s += `<rect x="${rx}" y="${y+h/2-5}" width="12" height="10" fill="#0a0f1a" stroke="${mc}" stroke-width="0.5" rx="2"/>`;
+    s += `<circle cx="${rx+4}" cy="${y+h/2}" r="1.5" fill="${mc}" opacity="0.5"/>`;
+    s += `<circle cx="${rx+8}" cy="${y+h/2}" r="1.5" fill="${mc}" opacity="0.5"/>`;
+  }
+
+  // Power status LED
+  s += `<circle cx="${x+w-6}" cy="${y+h/2}" r="3" fill="#22c55e" filter="url(#glow)" opacity="0.9"/>`;
+
+  return s;
+}
+
+// ── SERVER STENCIL ──
+function drawServerStencil(d, x, y, w, h, bc, ac, tc, mc, name) {
+  let s = '';
+
+  // Bezel indent
+  s += `<rect x="${x+4}" y="${y+3}" width="${w-8}" height="${h-6}" fill="#0a0f1a" rx="2" opacity="0.6"/>`;
+
+  // Drive bay indicators
+  const driveCount = 4;
+  for (let i = 0; i < driveCount; i++) {
+    const dx = x + 8 + i * 22;
+    s += `<rect x="${dx}" y="${y+4}" width="18" height="${h-8}" fill="#141e2a" stroke="${ac}" stroke-width="0.4" rx="1"/>`;
+    s += `<circle cx="${dx+9}" cy="${y+h-6}" r="2" fill="${Math.random()>0.2?'#22c55e':'#374151'}" opacity="0.8"/>`;
+  }
+
+  // Model label
+  s += `<text x="${x+driveCount*22+14}" y="${y+h/2-2}" font-family="DM Sans,sans-serif" font-size="7" font-weight="700" fill="${tc}">${name}</text>`;
+  s += `<text x="${x+driveCount*22+14}" y="${y+h/2+8}" font-family="JetBrains Mono,monospace" font-size="5" fill="${mc}">1U SERVER</text>`;
+
+  // NIC ports
+  const nicX = x + w - 45;
+  for (let i = 0; i < 2; i++) {
+    const nx = nicX + i * 18;
+    s += `<rect x="${nx}" y="${y+h/2-5}" width="14" height="10" fill="#0a0f1a" stroke="${ac}" stroke-width="0.5" rx="1"/>`;
+    s += `<circle cx="${nx+7}" cy="${y+h/2}" r="2" fill="#22c55e" opacity="0.7"/>`;
+  }
+
+  // Power button
+  s += `<circle cx="${x+w-6}" cy="${y+h/2}" r="4" fill="#0a0f1a" stroke="${ac}" stroke-width="0.8"/>`;
+  s += `<circle cx="${x+w-6}" cy="${y+h/2}" r="2.5" fill="${ac}" opacity="0.7"/>`;
+
+  return s;
+}
+
+// ── PDU STENCIL ──
+function drawPDUStencil(d, x, y, w, h, bc, ac, tc, mc, name) {
+  let s = '';
+  s += `<text x="${x+8}" y="${y+h/2-2}" font-family="DM Sans,sans-serif" font-size="7" font-weight="700" fill="${tc}">${name}</text>`;
+  s += `<text x="${x+8}" y="${y+h/2+8}" font-family="JetBrains Mono,monospace" font-size="5" fill="${mc}">POWER DISTRIBUTION</text>`;
+
+  // Outlet symbols
+  const outletCount = 6;
+  const outletX = x + w - (outletCount * 14) - 8;
+  for (let i = 0; i < outletCount; i++) {
+    const ox = outletX + i * 14;
+    s += `<circle cx="${ox+5}" cy="${y+h/2}" r="5" fill="#0a0f1a" stroke="${ac}" stroke-width="0.5"/>`;
+    s += `<line x1="${ox+3}" y1="${y+h/2-2}" x2="${ox+3}" y2="${y+h/2+2}" stroke="${ac}" stroke-width="1.2" opacity="0.7"/>`;
+    s += `<line x1="${ox+7}" y1="${y+h/2-2}" x2="${ox+7}" y2="${y+h/2+2}" stroke="${ac}" stroke-width="1.2" opacity="0.7"/>`;
+  }
+  s += `<circle cx="${x+w-5}" cy="${y+h/2}" r="2.5" fill="#22c55e" opacity="0.8"/>`;
+  return s;
+}
+
+// ── CABLE MANAGEMENT STENCIL ──
+function drawCableMgmtStencil(x, y, w, h, ac, mc) {
+  let s = '';
+  // D-ring finger duct pattern
+  const ringCount = Math.floor(w / 18);
+  for (let i = 0; i < ringCount; i++) {
+    const rx = x + 8 + i * 18;
+    s += `<path d="M${rx},${y+4} Q${rx+7},${y+2} ${rx+14},${y+4} L${rx+14},${y+h-4} Q${rx+7},${y+h-2} ${rx},${y+h-4} Z" fill="none" stroke="${ac}" stroke-width="0.8" opacity="0.5"/>`;
+  }
+  s += `<text x="${x+w/2}" y="${y+h/2+3}" text-anchor="middle" font-family="JetBrains Mono,monospace" font-size="6" fill="${mc}">CABLE MANAGEMENT</text>`;
+  return s;
+}
+
+// ── GENERIC STENCIL ──
+function drawGenericStencil(x, y, w, h, tc, mc, ac, name, type) {
+  let s = '';
+  s += `<rect x="${x+2}" y="${y+2}" width="${w-4}" height="${h-4}" fill="#0a0f1a" opacity="0.4" rx="1"/>`;
+  s += `<text x="${x+10}" y="${y+h/2+3}" font-family="DM Sans,sans-serif" font-size="8" font-weight="600" fill="${tc}">${name}</text>`;
+  s += `<text x="${x+w-8}" y="${y+h/2+3}" text-anchor="end" font-family="JetBrains Mono,monospace" font-size="6" fill="${mc}">${type.replace(/_/g,' ')}</text>`;
+  s += `<circle cx="${x+w-5}" cy="${y+h/2}" r="2" fill="${ac}" opacity="0.6"/>`;
+  return s;
 }
 
 // ─── ACTIONS ──────────────────────────────────────────────
