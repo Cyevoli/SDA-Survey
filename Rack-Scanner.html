@@ -490,28 +490,140 @@ async function startScan() {
     ? `RACK SIZE: This rack is confirmed ${rackSize}U total. Use this as ground truth — do NOT estimate a different total. All U positions must be within 1–${rackSize}.`
     : `RACK SIZE: Unknown — estimate from photos.`;
 
-  content.push({ type: 'text', text: `You are a senior network infrastructure engineer with deep expertise in identifying rack-mounted equipment by visual inspection. You have been given ${images.length} photo(s) of a network rack. Analyze ALL photos together cross-referencing them to build the most complete and accurate inventory possible.
+  content.push({ type: 'text', text: `You are a senior network infrastructure engineer and certified network equipment specialist. You have been given ${images.length} photo(s) of a network rack. Analyze ALL photos together, cross-referencing every image to build the most complete and accurate inventory possible.
 
-FRONT PANEL IDENTIFICATION — use these visual cues:
-- Read ALL visible text: vendor logos, model numbers, serial labels, port labels, LED labels
-- Port density: 48 ports in 1U = likely Cisco Catalyst 2960X-48 or similar; 24 ports = 2960-24; SFP ports on right side = uplinks
-- LED arrays: rows of small LEDs = switch or patch panel port indicators
-- Form factor: thin 1U with keystone jacks = patch panel; thin 1U with RJ45 rows = copper patch; thin with LC/SC ports = fiber patch panel
-- Fiber trays: flat panels with LC/SC duplex ports, usually wall or rack mounted, NOT cable management — label as fiber_panel
-- Cable management: horizontal panels with D-rings or finger ducts only, NOT fiber trays
-- UPS: large heavy units, usually 2U+, with battery indicators and output sockets
-- Firewall/router: look for console ports, management ports, vendor logos like Cisco, Fortinet, Palo Alto, Juniper, pfSense
+STEP 1 — READ THE BEZEL FIRST:
+Before anything else, look for printed text on every device. Model numbers, vendor names, and serial numbers are almost always printed directly on the front panel. If you can read "C9300-48P" or "Catalyst 9500" or "FortiGate 100F" — use that. Bezel text is ground truth and overrides all other inference.
+
+STEP 2 — CISCO IDENTIFICATION GUIDE:
+CISCO CATALYST 9300 SERIES (switch):
+- "C9300-24P", "C9300-48P", "C9300-48U", "C9300-48T" printed on bezel
+- 1U form factor, dark grey/charcoal chassis
+- 24 or 48 RJ45 ports in a SINGLE ROW across the front
+- 4x SFP+ uplink module on right side
+- Cisco logo and "Catalyst 9300" text on left side of bezel
+- PoE models (48P, 48U) have PoE LED indicators above ports
+
+CISCO CATALYST 9500 SERIES (switch):
+- "C9500-16X", "C9500-32C", "C9500-48Y4C" on bezel
+- 1U or 2U, darker chassis, NO access ports on front
+- Front shows only SFP/SFP+/QSFP uplink ports
+- Large "Catalyst 9500" text on bezel
+- Stack/QSFP modules visible on right
+
+CISCO CATALYST 8200L / 8200 SERIES (router):
+- "C8200L-1N-4T", "C8200-1N-4T" on bezel
+- 1U router form factor
+- WAN interfaces on front: combo RJ45/SFP ports
+- NIM module slots visible
+- "Catalyst 8200" or "8200L" on bezel
+- Lighter grey than switches
+
+CISCO CATALYST 8300/8500 (router):
+- Similar to 8200 but larger, more NIM slots
+- "8300" or "8500" on bezel
+
+CISCO ISR 4000 SERIES (router):
+- "ISR4331", "ISR4351", "ISR4431" on bezel
+- 1U-2U, WAN + LAN ports on front
+- NIM/SM module slots
+
+CISCO ASR 1000 SERIES (router):
+- "ASR1001", "ASR1002" on bezel
+- 1U-2U, multiple interface cards
+
+CISCO OLDER SWITCHES (switch):
+- Catalyst 2960X: "WS-C2960X-48FPD" etc, 1U, 48 ports single row
+- Catalyst 3850: "WS-C3850-48P" etc, stackable 1U
+- Catalyst 3650: similar to 3850, slightly thinner
+
+STEP 3 — OTHER VENDOR IDENTIFICATION GUIDE:
+
+JUNIPER NETWORKS:
+- EX2300, EX3400, EX4300: "EX2300-48P" etc on bezel, grey chassis, Juniper logo
+- EX4600, EX9200: larger chassis, modular
+- SRX300/500 series: security appliances/firewalls, "SRX300" on bezel
+- QFX5100/5110: data center switches, "QFX5100" on bezel
+
+ARUBA / HPE:
+- Aruba 2930F, 2930M, 6300: "JL557A" part numbers or "2930F-48G" on bezel
+- Silver/grey chassis, Aruba or HPE logo
+- CX 6200, 6300, 6400 series: newer blue Aruba branding
+
+FORTINET:
+- FortiGate 60F, 100F, 200F, 400E, 600E, 1000D: "FortiGate-100F" on bezel
+- Dark chassis, Fortinet logo (red/white), security appliance form factor
+- Multiple WAN/LAN ports on front
+- USB port on front panel
+
+PALO ALTO NETWORKS:
+- PA-220, PA-440, PA-820, PA-850, PA-3220, PA-5220: "PA-440" on bezel
+- Dark chassis, Palo Alto logo
+- Fewer but clearly labeled interface ports
+
+MERAKI (Cisco):
+- MS120, MS225, MS250, MS350, MS390, MS410, MS425: "MS250-48" on bezel
+- Cloud-managed, Meraki logo, often has cloud LED indicator
+- Similar port layout to Catalyst but Meraki branding
+
+UBIQUITI / UNIFI:
+- UniFi Switch 24/48, USW-Pro-48: "USW-Pro-48" on bezel
+- White or light grey chassis, UniFi logo
+- Clean minimal design
+
+NETGEAR:
+- GS748T, M4300, M4500: "M4300-28G" on bezel
+- Grey chassis, NETGEAR logo
+
+APC / SCHNEIDER (UPS):
+- Smart-UPS 1500, 2200, 3000: "Smart-UPS 1500" on front
+- "APC" logo prominently displayed
+- Battery charge indicator bar on front panel
+- 2U-4U typically
+
+EATON (UPS):
+- 5P, 5PX, 9PX series: "Eaton 5PX" on bezel
+- Blue Eaton branding
+
+VERTIV / LIEBERT (UPS):
+- GXT4, PSI5: Vertiv or Liebert logo
+
+DELL / EMC (servers):
+- PowerEdge R640, R740, R750: "PowerEdge R640" on bezel
+- Dell logo, drive bay indicators on front
+
+HP / HPE (servers):
+- ProLiant DL360, DL380: "ProLiant DL360" on bezel
+- HP/HPE logo, iLO port on front
+
+CORNING / COMMSCOPE (fiber panels):
+- Corning CCH panels, LANscape: "Corning" on bezel
+- Wall-mount or rack fiber trays with LC/SC ports
+- These are fiber_panel NOT cable_management
+
+PANDUIT / LEVITON / BELDEN (patch panels):
+- Standard copper patch panels with RJ45 ports
+- Port numbering 1-24 or 1-48 printed below ports
+
+STEP 4 — FORM FACTOR RULES:
+- Wall-mounted box or tray with fiber LC/SC ports = fiber_panel (NOT cable_management)
+- Horizontal bar with D-rings or finger ducts = cable_management
+- 1U with 24-48 RJ45 ports = switch or patch_panel
+- 1U with labeled WAN/LAN interfaces + console port = router
+- 1U-2U with many SFP/QSFP ports, no RJ45 access ports = core switch or router
+- Large heavy unit 2U+ with battery indicator = ups
+- 1U with drive bays = server
 
 ${rackSizeContext}
 
-U POSITION RULES — always provide a best estimate:
+STEP 5 — U POSITION RULES:
 - The rack size above is GROUND TRUTH if provided — never exceed it
-- Count rack unit markings visible on the rack rails (small numbers on the side)
-- If rail markings not visible, estimate from relative position: top device gets highest U, bottom gets lowest
-- Use the full rack overview photo to establish proportional positions, then close-up photos to refine
-- NEVER return null for u_position — always give your best estimate and mark confidence accordingly
-- U1 = bottom of rack, highest U number = top of rack
-- If rack size is known, the topmost device should be at or near that number
+- Look for rack unit numbers printed on the rail strips (small numbers 1-42 etc)
+- If rail numbers visible, use them directly — they are exact
+- If not visible: divide the rack into proportional zones from the overview photo
+- Top device in rack = highest U number; bottom device = lowest U number (U1)
+- NEVER return null for u_position — always give best estimate with low confidence if unsure
+- If rack size is 42U and top device is near the top, it should be around U40-42
 
 Return ONLY valid JSON (no markdown, no explanation, no preamble):
 {
@@ -523,23 +635,23 @@ Return ONLY valid JSON (no markdown, no explanation, no preamble):
       "u_position": <number — REQUIRED, always estimate>,
       "u_size": <number, default 1>,
       "type": "switch" | "patch_panel" | "ups" | "server" | "router" | "firewall" | "ap_controller" | "pdu" | "cable_management" | "fiber_panel" | "modem" | "other",
-      "vendor": "<string — read from label if visible, otherwise best guess from form factor>",
-      "model": "<string — read from label if visible, otherwise null>",
+      "vendor": "<string — read from bezel first, then infer>",
+      "model": "<string — read from bezel first, then infer from visual cues, otherwise null>",
       "ports": <number or null>,
-      "notes": "<what you see: port types, visible labels, LED state, cable density>",
+      "notes": "<visible labels, LED state, cable types, anything notable>",
       "confidence": "high" | "medium" | "low"
     }
   ],
-  "warnings": ["<anything that could affect a network upgrade: no UPS, full rack, excessive cable clutter, unlabeled cables, heat concerns, aged equipment>"],
-  "observations": "<3-4 sentences: overall rack condition, cable management quality, equipment age/mix, anything notable for a field engineer planning an upgrade>"
+  "warnings": ["<anything affecting a network upgrade: no UPS, full rack, cable clutter, unlabeled cables, heat risk, end-of-life equipment>"],
+  "observations": "<3-4 sentences: rack condition, cable management quality, equipment age/mix, upgrade considerations>"
 }
 
 Critical rules:
 - List devices top to bottom (highest U number first)
-- Include EVERY visible device — never skip something just because you are uncertain
-- Do NOT label fiber trays or wall-mounted patch panels as cable_management
-- Always provide u_position — use low confidence if estimating
-- Distinguish between fiber_panel (has LC/SC fiber ports) and patch_panel (has RJ45 copper ports)` });
+- Include EVERY visible device — never skip due to uncertainty, use low confidence instead
+- Bezel text ALWAYS overrides visual inference
+- fiber_panel = LC/SC fiber ports; patch_panel = RJ45 copper ports; cable_management = D-rings/finger ducts only
+- Always provide u_position` });
 
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
