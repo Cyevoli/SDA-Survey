@@ -212,6 +212,29 @@
   .rack-device-sublabel { font-family: 'JetBrains Mono', monospace; font-size: 9px; fill: #8892a8; }
 
 
+
+  /* RACK SIZE SELECTOR */
+  .rack-size-wrap {
+    margin: 0 16px 0; padding: 14px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .rack-size-label {
+    font-size: 11px; font-weight: 600; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 1px;
+    font-family: var(--mono); margin-bottom: 10px; display: flex;
+    align-items: center; justify-content: space-between;
+  }
+  .rack-size-label span { color: var(--accent); font-size: 13px; font-weight: 700; }
+
+  .rack-size-custom { display: flex; align-items: center; gap: 8px; }
+  .rack-size-custom input {
+    flex: 1; background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: 8px; padding: 8px 12px; font-size: 13px;
+    color: var(--text); font-family: var(--mono);
+  }
+  .rack-size-custom input:focus { outline: none; border-color: var(--accent); }
+  .rack-size-custom label { font-size: 12px; color: var(--muted); white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -237,6 +260,19 @@
     <div>
       <button class="btn-sm primary" onclick="saveApiKey()">Save key</button>
       <button class="btn-sm ghost" onclick="toggleApiPanel()">Cancel</button>
+    </div>
+  </div>
+
+  <!-- RACK SIZE SELECTOR -->
+  <div class="rack-size-wrap">
+    <div class="rack-size-label">
+      Rack size <span id="rackSizeDisplay">Not set</span>
+    </div>
+    <div class="rack-size-custom">
+      <label>Total rack units:</label>
+      <input type="number" id="customRackSize" placeholder="e.g. 42" min="1" max="100"
+        oninput="setRackSize(parseInt(this.value)||0, true)">
+      <label>U</label>
     </div>
   </div>
 
@@ -326,6 +362,7 @@
 let apiKey = localStorage.getItem('sda_api_key') || '';
 let images = []; // array of base64 strings, up to 8
 let scanResult = null;
+let rackSize = 0; // 0 = not set, use Claude estimate
 
 // ─── INIT ─────────────────────────────────────────────────
 window.onload = () => {
@@ -357,6 +394,13 @@ function updateApiPill(set) {
   const pill = document.getElementById('apiPill');
   pill.textContent = set ? '✓ API Key set' : 'API Key ▾';
   pill.className = set ? 'api-pill set' : 'api-pill';
+}
+
+
+// ─── RACK SIZE ────────────────────────────────────────────
+function setRackSize(u) {
+  rackSize = u;
+  document.getElementById('rackSizeDisplay').textContent = u > 0 ? u + 'U' : 'Not set';
 }
 
 // ─── PHOTO HANDLING ───────────────────────────────────────
@@ -441,6 +485,11 @@ async function startScan() {
     content.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: img } });
   });
 
+  // Build rack size context string
+  const rackSizeContext = rackSize > 0
+    ? `RACK SIZE: This rack is confirmed ${rackSize}U total. Use this as ground truth — do NOT estimate a different total. All U positions must be within 1–${rackSize}.`
+    : `RACK SIZE: Unknown — estimate from photos.`;
+
   content.push({ type: 'text', text: `You are a senior network infrastructure engineer with deep expertise in identifying rack-mounted equipment by visual inspection. You have been given ${images.length} photo(s) of a network rack. Analyze ALL photos together cross-referencing them to build the most complete and accurate inventory possible.
 
 FRONT PANEL IDENTIFICATION — use these visual cues:
@@ -453,16 +502,20 @@ FRONT PANEL IDENTIFICATION — use these visual cues:
 - UPS: large heavy units, usually 2U+, with battery indicators and output sockets
 - Firewall/router: look for console ports, management ports, vendor logos like Cisco, Fortinet, Palo Alto, Juniper, pfSense
 
+${rackSizeContext}
+
 U POSITION RULES — always provide a best estimate:
+- The rack size above is GROUND TRUTH if provided — never exceed it
 - Count rack unit markings visible on the rack rails (small numbers on the side)
-- If rail markings not visible, estimate from relative position in the rack
-- Use the full rack overview photo to establish total rack size, then close-up photos to pinpoint positions
+- If rail markings not visible, estimate from relative position: top device gets highest U, bottom gets lowest
+- Use the full rack overview photo to establish proportional positions, then close-up photos to refine
 - NEVER return null for u_position — always give your best estimate and mark confidence accordingly
 - U1 = bottom of rack, highest U number = top of rack
+- If rack size is known, the topmost device should be at or near that number
 
 Return ONLY valid JSON (no markdown, no explanation, no preamble):
 {
-  "rack_units_total": <number, estimate if not visible>,
+  "rack_units_total": <number — use confirmed rack size if provided, otherwise estimate>,
   "rack_units_used": <number>,
   "overall_confidence": "high" | "medium" | "low",
   "devices": [
