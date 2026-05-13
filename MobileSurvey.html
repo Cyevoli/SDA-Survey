@@ -1103,7 +1103,7 @@ ${s.type?`<tr><td style="padding:5px 12px;color:#666;font-size:13px">Type</td><t
 ${(s.uplinkSpeed||s.uplinkConn)?`<tr><td style="padding:5px 12px;color:#666;font-size:13px">Uplink</td><td style="padding:5px 12px;font-size:13px">${[s.uplinkSpeed,s.uplinkConn].filter(Boolean).join(' ')}</td></tr>`:''}
 ${s.mount?`<tr><td style="padding:5px 12px;color:#666;font-size:13px">Mount</td><td style="padding:5px 12px;font-size:13px">${s.mount}</td></tr>`:''}
 ${s.notes?`<tr><td style="padding:5px 12px;color:#666;font-size:13px">Notes</td><td style="padding:5px 12px;font-size:13px">${s.notes}</td></tr>`:''}
-</table>\`).join('');
+</table>`).join('');
 })()}
 
 ${secHeader(6,'End Devices','sec6')}
