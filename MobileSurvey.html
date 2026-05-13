@@ -313,10 +313,19 @@
       </div>
       <div class="sec-body" id="body2">
         <div class="row2" style="margin-top:10px">
-          <div class="field"><label>Free rack units (U)</label><input type="number" id="c_u" placeholder="U"></div>
+          <div class="field"><label>Rack height (U)</label><input type="number" id="c_u" placeholder="U" oninput="buildRackTable(this.value)"></div>
           <div class="field"><label>Room temp (°F)</label><input type="number" id="c_temp" placeholder="°F"></div>
         </div>
-        <div class="field"><label>Shelves required</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'c_shelf','Y')">Y</button><button class="yn-btn" onclick="yn(this,'c_shelf','N')">N</button></div></div>
+        <div id="rackTableWrap" style="display:none;margin-bottom:10px">
+          <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Rack layout (top → bottom)</label>
+          <div style="border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden">
+            <div style="display:grid;grid-template-columns:48px 1fr;background:var(--surface2);border-bottom:1px solid var(--border)">
+              <div style="padding:6px 8px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">U</div>
+              <div style="padding:6px 8px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;border-left:1px solid var(--border)">Device / Notes</div>
+            </div>
+            <div id="rackTableRows"></div>
+          </div>
+        </div>
         <div class="field"><label>Room for parallel install</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'c_4u','Y')">Y</button><button class="yn-btn" onclick="yn(this,'c_4u','N')">N</button></div></div>
         <div class="field"><label>Cabinet locked</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'c_lock','Y')">Y</button><button class="yn-btn" onclick="yn(this,'c_lock','N')">N</button></div></div>
         <div class="field"><label>Room access</label><div class="btn-group" id="grp_c_access">
@@ -625,6 +634,31 @@ let selectedNotebookId = null;
 let selectedSectionId = null;
 let clientId = null;
 
+// ---- TOKEN HELPERS ----
+// Tokens are stored in localStorage with an expiry timestamp so they
+// survive tab closes and page refreshes for up to 2 days.
+const TOKEN_TTL_MS = 2 * 24 * 60 * 60 * 1000; // 48 hours
+
+function saveToken(token) {
+  localStorage.setItem('sda_token', token);
+  localStorage.setItem('sda_token_exp', Date.now() + TOKEN_TTL_MS);
+}
+
+function loadToken() {
+  const token = localStorage.getItem('sda_token');
+  const exp = parseInt(localStorage.getItem('sda_token_exp') || '0', 10);
+  if (token && Date.now() < exp) return token;
+  // Expired or missing — clear and return null
+  localStorage.removeItem('sda_token');
+  localStorage.removeItem('sda_token_exp');
+  return null;
+}
+
+function clearToken() {
+  localStorage.removeItem('sda_token');
+  localStorage.removeItem('sda_token_exp');
+}
+
 // ---- INIT ----
 window.onload = () => {
   clientId = localStorage.getItem('sda_client_id');
@@ -635,7 +669,7 @@ window.onload = () => {
   if (hash.includes('access_token')) {
     const params = new URLSearchParams(hash.replace('#','?'));
     accessToken = params.get('access_token');
-    sessionStorage.setItem('sda_token', accessToken);
+    saveToken(accessToken);
     window.location.hash = '';
     if (nb && sec) {
       selectedNotebookId = nb;
@@ -646,13 +680,20 @@ window.onload = () => {
     }
     return;
   }
-  accessToken = sessionStorage.getItem('sda_token');
+  accessToken = loadToken();
   if (accessToken && nb && sec) {
     selectedNotebookId = nb;
     selectedSectionId = sec;
     showForm();
   } else if (clientId) {
-    show('authScreen');
+    // Token missing or expired — go straight to silent re-auth
+    if (nb && sec) {
+      // Notebook already configured; skip straight to sign-in
+      show('authScreen');
+      document.getElementById('authStatus').textContent = 'Session expired — please sign in again.';
+    } else {
+      show('authScreen');
+    }
   } else {
     show('setupScreen');
   }
@@ -688,7 +729,7 @@ function resetSetup() {
 // ---- AUTH ----
 function signIn() {
   if (!clientId) { show('setupScreen'); return; }
-  const redirectUri = encodeURIComponent(window.location.href.split('#')[0]);
+  const redirectUri = encodeURIComponent('https://cyevoli.github.io/SDA-Survey/MobileSurvey.html');
   const url = `https://login.microsoftonline.com/1c2e9c91-1f76-4c71-b8fd-b6d5854c8890/oauth2/v2.0/authorize?client_id=${clientId}&response_type=token&redirect_uri=${redirectUri}&scope=${encodeURIComponent(SCOPES)}&response_mode=fragment`;
   window.location.href = url;
 }
@@ -781,6 +822,44 @@ function tog(btn, key) {
   if (idx >= 0) state.tog[key].splice(idx,1); else state.tog[key].push(txt);
 }
 
+function buildRackTable(val) {
+  const u = parseInt(val, 10);
+  const wrap = document.getElementById('rackTableWrap');
+  const rows = document.getElementById('rackTableRows');
+  if (!u || u < 1 || u > 100) { wrap.style.display = 'none'; rows.innerHTML = ''; return; }
+  wrap.style.display = 'block';
+  // Preserve any existing values keyed by U number
+  const existing = {};
+  rows.querySelectorAll('[data-u]').forEach(inp => { existing[inp.dataset.u] = inp.value; });
+  rows.innerHTML = '';
+  for (let i = u; i >= 1; i--) {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:grid;grid-template-columns:48px 1fr;border-top:1px solid var(--border)';
+    const uCell = document.createElement('div');
+    uCell.style.cssText = 'padding:5px 8px;font-size:12px;font-weight:600;color:var(--muted);display:flex;align-items:center;background:var(--surface2)';
+    uCell.textContent = 'U' + i;
+    const noteCell = document.createElement('div');
+    noteCell.style.cssText = 'border-left:1px solid var(--border)';
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.dataset.u = i;
+    inp.placeholder = 'e.g. Cisco 3850, patch panel, cable mgmt, free…';
+    inp.value = existing[i] || '';
+    inp.style.cssText = 'width:100%;background:transparent;border:none;padding:5px 8px;font-size:13px;color:var(--text);font-family:inherit;outline:none';
+    noteCell.appendChild(inp);
+    row.appendChild(uCell);
+    row.appendChild(noteCell);
+    rows.appendChild(row);
+  }
+}
+
+function getRackLayout() {
+  const rows = document.querySelectorAll('#rackTableRows [data-u]');
+  const result = [];
+  rows.forEach(inp => { result.push({ u: inp.dataset.u, note: inp.value.trim() }); });
+  return result;
+}
+
 function setSec(secId, val, btn) {
   state.statuses[secId] = val;
   const num = secId.replace('sec','');
@@ -836,11 +915,12 @@ async function submitToOneNote() {
     });
     if (!res.ok) {
       const err = await res.json();
-      if (err.error && err.error.code === 'ErrorAccessDenied') {
-        // Token expired, re-auth
-        sessionStorage.removeItem('sda_token');
+      if (err.error && (err.error.code === 'ErrorAccessDenied' || err.error.code === 'InvalidAuthenticationToken')) {
+        // Token expired or invalid — clear and prompt re-auth
+        clearToken();
         accessToken = null;
         show('authScreen');
+        document.getElementById('authStatus').textContent = 'Session expired — please sign in again.';
         return;
       }
       throw new Error(err.error?.message || 'Unknown error');
@@ -898,15 +978,15 @@ ${g('p_notes')?row('Notes',g('p_notes')):''}
 
 ${secHeader(2,'Cabinet / Rack','sec2')}
 <table style="border-collapse:collapse;width:100%">
-${row('Free rack units',g('c_u')+' U')}
+${row('Rack height',g('c_u')+' U')}
 ${row('Room temp',g('c_temp')+'°F')}
-${row('Shelves required',yv('c_shelf'))}
 ${row('Room for parallel install',yv('c_4u'))}
 ${row('Cabinet locked',yv('c_lock'))}
 ${row('Room access',tv('c_access'))}
 ${row('Airflow',tv('c_air'))}
 ${g('c_notes')?row('Notes',g('c_notes')):''}
 </table>
+${(()=>{const rl=getRackLayout();if(!rl.length)return'';return'<h3 style="font-size:13px;font-weight:600;margin:12px 0 6px">Rack Layout</h3><table style="border-collapse:collapse;width:100%;border:1px solid #ddd"><tr style="background:#f5f5f5"><th style="padding:5px 10px;font-size:12px;text-align:left;border:1px solid #ddd;width:60px">U</th><th style="padding:5px 10px;font-size:12px;text-align:left;border:1px solid #ddd">Device / Notes</th></tr>'+rl.map(r=>`<tr><td style="padding:5px 10px;font-size:12px;border:1px solid #ddd;color:#666">U${r.u}</td><td style="padding:5px 10px;font-size:12px;border:1px solid #ddd">${r.note||'—'}</td></tr>`).join('')+'</table>';})()}
 
 ${secHeader(3,'Fiber & Cabling','sec3')}
 <table style="border-collapse:collapse;width:100%">
