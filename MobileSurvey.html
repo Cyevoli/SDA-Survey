@@ -407,28 +407,20 @@
       </div>
     </div>
 
-    <!-- SEC 5: COMPUTERS -->
+    <!-- SEC 5: END DEVICES -->
     <div class="section" id="sec5">
       <div class="sec-head" onclick="toggleSec('sec5')">
         <div class="sec-head-left">
           <div class="sec-num">5</div>
-          <div class="sec-title">Computers / Servers</div>
+          <div class="sec-title">End Devices</div>
           <span class="sec-badge pending" id="badge5">—</span>
         </div>
         <span class="chevron" id="chev5">▼</span>
       </div>
       <div class="sec-body" id="body5">
-        <div class="row2" style="margin-top:10px">
-          <div class="field"><label>Wired PCs</label><input type="number" id="pc_wired" placeholder="count"></div>
-          <div class="field"><label>Wireless PCs</label><input type="number" id="pc_wifi" placeholder="count"></div>
-        </div>
-        <div class="row2">
-          <div class="field"><label>Win 11 ready</label><input type="number" id="pc_w11" placeholder="count"></div>
-          <div class="field"><label>Non-compliant</label><input type="number" id="pc_nc" placeholder="count"></div>
-        </div>
-        <div class="row2">
-          <div class="field"><label>Network printers</label><input type="number" id="pc_print" placeholder="count"></div>
-        </div>
+
+        <!-- Computers -->
+        <div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.8px;margin:12px 0 8px">Computers</div>
         <div class="field"><label>OS mix</label><div class="btn-group" id="grp_pc_os">
           <button class="tog-btn" onclick="tog(this,'pc_os')">Win 11</button>
           <button class="tog-btn" onclick="tog(this,'pc_os')">Win 10</button>
@@ -437,28 +429,11 @@
           <button class="tog-btn" onclick="tog(this,'pc_os')">Linux</button>
         </div></div>
         <div class="field"><label>Specialty PCs / SCADA / CAD</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'pc_spec','Y')">Y</button><button class="yn-btn" onclick="yn(this,'pc_spec','N')">N</button></div></div>
-        <div class="field"><label>Printers on static IP</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'pc_staticip','Y')">Y</button><button class="yn-btn" onclick="yn(this,'pc_staticip','N')">N</button></div></div>
-        <div class="field"><label>Non-compliant model(s)</label><input type="text" id="pc_ncmodel" placeholder="Make / model"></div>
-        <div class="status-strip">
-          <button class="st-btn" onclick="setSec('sec5','READY',this)">Ready</button>
-          <button class="st-btn" onclick="setSec('sec5','BLOCKERS',this)">Blockers</button>
-          <button class="st-btn" onclick="setSec('sec5','NOT READY',this)">Not ready</button>
-        </div>
-      </div>
-    </div>
+        <div class="field"><label>Printer models</label><input type="text" id="pc_print" placeholder="e.g. HP LaserJet M404n, Xerox B310"></div>
 
-    <!-- SEC 6: CAMERAS -->
-    <div class="section" id="sec6">
-      <div class="sec-head" onclick="toggleSec('sec6')">
-        <div class="sec-head-left">
-          <div class="sec-num">6</div>
-          <div class="sec-title">Cameras / DVR</div>
-          <span class="sec-badge pending" id="badge6">—</span>
-        </div>
-        <span class="chevron" id="chev6">▼</span>
-      </div>
-      <div class="sec-body" id="body6">
-        <div class="row2" style="margin-top:10px">
+        <!-- Cameras / DVR -->
+        <div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.8px;margin:14px 0 8px">Cameras / DVR</div>
+        <div class="row2">
           <div class="field"><label>IP cameras</label><input type="number" id="cam_ip" placeholder="count"></div>
           <div class="field"><label>Analog cameras</label><input type="number" id="cam_ana" placeholder="count"></div>
         </div>
@@ -473,27 +448,11 @@
           <button class="tog-btn" onclick="tog(this,'cam_loc')">Server room</button>
           <button class="tog-btn" onclick="tog(this,'cam_loc')">Remote</button>
         </div></div>
-        <div class="field"><label>Cutover risk / notes</label><textarea id="cam_notes" placeholder="Camera cutover notes..."></textarea></div>
-        <div class="status-strip">
-          <button class="st-btn" onclick="setSec('sec6','READY',this)">Ready</button>
-          <button class="st-btn" onclick="setSec('sec6','BLOCKERS',this)">Blockers</button>
-          <button class="st-btn" onclick="setSec('sec6','NOT READY',this)">Not ready</button>
-        </div>
-      </div>
-    </div>
+        <div class="field"><label>Camera notes</label><textarea id="cam_notes" placeholder="Camera notes..."></textarea></div>
 
-    <!-- SEC 7: IOT -->
-    <div class="section" id="sec7">
-      <div class="sec-head" onclick="toggleSec('sec7')">
-        <div class="sec-head-left">
-          <div class="sec-num">7</div>
-          <div class="sec-title">IoT Devices</div>
-          <span class="sec-badge pending" id="badge7">—</span>
-        </div>
-        <span class="chevron" id="chev7">▼</span>
-      </div>
-      <div class="sec-body" id="body7">
-        <div class="row2" style="margin-top:10px">
+        <!-- IoT -->
+        <div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.8px;margin:14px 0 8px">IoT Devices</div>
+        <div class="row2">
           <div class="field"><label>Badge readers</label><input type="number" id="iot_badge" placeholder="count"></div>
           <div class="field"><label>IP phones / VoIP</label><input type="number" id="iot_voip" placeholder="count"></div>
         </div>
@@ -505,26 +464,10 @@
         <div class="field"><label>Call manager / PBX</label><input type="text" id="iot_pbx" placeholder="CM / PBX system"></div>
         <div class="field"><label>Proprietary IoT (needs gateway)</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'iot_prop','Y')">Y</button><button class="yn-btn" onclick="yn(this,'iot_prop','N')">N</button></div></div>
         <div class="field"><label>Isolated VLAN needed</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'iot_vlan','Y')">Y</button><button class="yn-btn" onclick="yn(this,'iot_vlan','N')">N</button></div></div>
-        <div class="status-strip">
-          <button class="st-btn" onclick="setSec('sec7','READY',this)">Ready</button>
-          <button class="st-btn" onclick="setSec('sec7','BLOCKERS',this)">Blockers</button>
-          <button class="st-btn" onclick="setSec('sec7','NOT READY',this)">Not ready</button>
-        </div>
-      </div>
-    </div>
 
-    <!-- SEC 8: WIRELESS -->
-    <div class="section" id="sec8">
-      <div class="sec-head" onclick="toggleSec('sec8')">
-        <div class="sec-head-left">
-          <div class="sec-num">8</div>
-          <div class="sec-title">Wireless APs</div>
-          <span class="sec-badge pending" id="badge8">—</span>
-        </div>
-        <span class="chevron" id="chev8">▼</span>
-      </div>
-      <div class="sec-body" id="body8">
-        <div class="field" style="margin-top:10px"><label>APs present</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'ap_pres','Y')">Y</button><button class="yn-btn" onclick="yn(this,'ap_pres','N')">N</button></div></div>
+        <!-- Wireless APs -->
+        <div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.8px;margin:14px 0 8px">Wireless APs</div>
+        <div class="field"><label>APs present</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'ap_pres','Y')">Y</button><button class="yn-btn" onclick="yn(this,'ap_pres','N')">N</button></div></div>
         <div class="row2">
           <div class="field"><label>Interior AP count</label><input type="number" id="ap_int" placeholder="count"></div>
           <div class="field"><label>Exterior AP count</label><input type="number" id="ap_ext" placeholder="count"></div>
@@ -533,43 +476,8 @@
           <div class="field"><label>AP brand</label><input type="text" id="ap_brand" placeholder="Brand"></div>
           <div class="field"><label>AP model</label><input type="text" id="ap_model" placeholder="Model"></div>
         </div>
-        <div class="field"><label>Connects to Catalyst 9K</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'ap_9k','Y')">Y</button><button class="yn-btn" onclick="yn(this,'ap_9k','N')">N</button></div></div>
-        <div class="field"><label>Notes</label><textarea id="ap_notes" placeholder="AP notes..."></textarea></div>
-        <div class="status-strip">
-          <button class="st-btn" onclick="setSec('sec8','READY',this)">Ready</button>
-          <button class="st-btn" onclick="setSec('sec8','BLOCKERS',this)">Blockers</button>
-          <button class="st-btn" onclick="setSec('sec8','NOT READY',this)">Not ready</button>
-        </div>
-      </div>
-    </div>
+        <div class="field"><label>AP notes</label><textarea id="ap_notes" placeholder="AP notes..."></textarea></div>
 
-    <!-- SEC 9: SIGN-OFF -->
-    <div class="section" id="sec9">
-      <div class="sec-head" onclick="toggleSec('sec9')">
-        <div class="sec-head-left">
-          <div class="sec-num">9</div>
-          <div class="sec-title">Sign-off</div>
-          <span class="sec-badge pending" id="badge9">—</span>
-        </div>
-        <span class="chevron" id="chev9">▼</span>
-      </div>
-      <div class="sec-body" id="body9">
-        <div class="row2" style="margin-top:10px">
-          <div class="field"><label>After-hours contact</label><input type="text" id="so_ah" placeholder="Name / number"></div>
-          <div class="field"><label>Ticket / project ref #</label><input type="text" id="so_ticket" placeholder="Ref #"></div>
-        </div>
-        <div class="row2">
-          <div class="field"><label>Est. install time (hrs)</label><input type="number" id="so_hrs" placeholder="hrs"></div>
-          <div class="field"><label>Preferred cutover window</label><input type="text" id="so_window" placeholder="e.g. Sat 10pm–2am"></div>
-        </div>
-        <div class="field"><label>Photos of rack taken</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'so_photos','Y')">Y</button><button class="yn-btn" onclick="yn(this,'so_photos','N')">N</button></div></div>
-        <div class="field"><label>All blockers logged in ticket</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'so_logged','Y')">Y</button><button class="yn-btn" onclick="yn(this,'so_logged','N')">N</button></div></div>
-        <div class="field"><label>Overall site notes / blockers</label><textarea id="so_notes" placeholder="Anything blocking install..."></textarea></div>
-        <div class="status-strip">
-          <button class="st-btn" onclick="setSec('sec9','READY',this)">Ready</button>
-          <button class="st-btn" onclick="setSec('sec9','BLOCKERS',this)">Blockers</button>
-          <button class="st-btn" onclick="setSec('sec9','NOT READY',this)">Not ready</button>
-        </div>
       </div>
     </div>
   </div>
@@ -953,8 +861,8 @@ function setOverall(btn, val) {
 
 function updateProgress() {
   const done = Object.keys(state.statuses).length;
-  document.getElementById('topbarSub').textContent = done + ' / 9 sections complete';
-  document.getElementById('progressFill').style.width = Math.round(done/9*100) + '%';
+  document.getElementById('topbarSub').textContent = done + ' / 5 sections complete';
+  document.getElementById('progressFill').style.width = Math.round(done/5*100) + '%';
 }
 
 function g(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
@@ -1092,18 +1000,14 @@ ${row('Uplink',tv('sw_up')+' x'+g('sw_uplinks'))}
 ${row('Racking orientation',tv('sw_orient'))}
 </table>
 
-${secHeader(5,'Computers / Servers','sec5')}
+${secHeader(5,'End Devices','sec5')}
+<h3 style="font-size:12px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:0.5px;margin:10px 0 4px">Computers</h3>
 <table style="border-collapse:collapse;width:100%">
-${row('Wired / Wireless PCs',g('pc_wired')+' wired / '+g('pc_wifi')+' wireless')}
-${row('Win 11 ready / Non-compliant',g('pc_w11')+' ready / '+g('pc_nc')+' non-compliant')}
-${row('Printers',g('pc_print')+' printers')}
 ${row('OS mix',tv('pc_os'))}
 ${row('Specialty / SCADA',yv('pc_spec'))}
-${row('Printers static IP',yv('pc_staticip'))}
-${g('pc_ncmodel')?row('Non-compliant models',g('pc_ncmodel')):''}
+${g('pc_print')?row('Printer models',g('pc_print')):''}
 </table>
-
-${secHeader(6,'Cameras / DVR','sec6')}
+<h3 style="font-size:12px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:0.5px;margin:10px 0 4px">Cameras / DVR</h3>
 <table style="border-collapse:collapse;width:100%">
 ${row('IP / Analog cameras',g('cam_ip')+' IP / '+g('cam_ana')+' analog')}
 ${row('DVR/NVR',g('cam_make')+' '+g('cam_model'))}
@@ -1112,37 +1016,23 @@ ${row('Camera VLAN isolated',yv('cam_vlan'))}
 ${row('DVR location',tv('cam_loc'))}
 ${g('cam_notes')?row('Notes',g('cam_notes')):''}
 </table>
-
-${secHeader(7,'IoT Devices','sec7')}
+<h3 style="font-size:12px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:0.5px;margin:10px 0 4px">IoT Devices</h3>
 <table style="border-collapse:collapse;width:100%">
 ${row('Badge readers',g('iot_badge'))}
 ${row('IP phones / VoIP',g('iot_voip'))}
 ${row('Digital signage',g('iot_sign'))}
 ${row('Other IoT',g('iot_other'))}
-${row('Access control vendor',g('iot_acv'))}
-${row('Call manager / PBX',g('iot_pbx'))}
+${g('iot_acv')?row('Access control vendor',g('iot_acv')):''}
+${g('iot_pbx')?row('Call manager / PBX',g('iot_pbx')):''}
 ${row('Proprietary IoT',yv('iot_prop'))}
 ${row('Isolated VLAN needed',yv('iot_vlan'))}
 </table>
-
-${secHeader(8,'Wireless APs','sec8')}
+<h3 style="font-size:12px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:0.5px;margin:10px 0 4px">Wireless APs</h3>
 <table style="border-collapse:collapse;width:100%">
 ${row('APs present',yv('ap_pres'))}
 ${row('Interior / Exterior APs',g('ap_int')+' interior / '+g('ap_ext')+' exterior')}
 ${row('Brand / Model',g('ap_brand')+' '+g('ap_model'))}
-${row('Connects to Catalyst 9K',yv('ap_9k'))}
 ${g('ap_notes')?row('Notes',g('ap_notes')):''}
-</table>
-
-${secHeader(9,'Sign-off','sec9')}
-<table style="border-collapse:collapse;width:100%">
-${row('After-hours contact',g('so_ah'))}
-${row('Ticket / Ref #',g('so_ticket'))}
-${row('Est. install time',g('so_hrs')+' hrs')}
-${row('Cutover window',g('so_window'))}
-${row('Photos taken',yv('so_photos'))}
-${row('Blockers logged',yv('so_logged'))}
-${g('so_notes')?row('Site notes / blockers',g('so_notes')):''}
 </table>
 
 <p style="color:#999;font-size:11px;margin-top:32px">Generated by SDA Site Readiness Tool</p>
