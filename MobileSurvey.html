@@ -400,14 +400,10 @@
           <button class="tog-btn" onclick="tog(this,'sw_up')">1G copper</button>
           <button class="tog-btn" onclick="tog(this,'sw_up')">Other</button>
         </div></div>
-        <div class="field"><label>Config backed up</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'sw_cfg','Y')">Y</button><button class="yn-btn" onclick="yn(this,'sw_cfg','N')">N</button></div></div>
-        <div class="field"><label>Serial number(s)</label><input type="text" id="sw_serial" placeholder="SN(s)"></div>
-        <div class="field"><label>Cutover window</label><input type="text" id="sw_cutover" placeholder="e.g. weekends only, after 10pm"></div>
-        <div class="status-strip">
-          <button class="st-btn" onclick="setSec('sec4','READY',this)">Ready</button>
-          <button class="st-btn" onclick="setSec('sec4','BLOCKERS',this)">Blockers</button>
-          <button class="st-btn" onclick="setSec('sec4','NOT READY',this)">Not ready</button>
-        </div>
+        <div class="field"><label>Racking orientation</label><div class="btn-group" id="grp_sw_orient">
+          <button class="tog-btn" onclick="tog(this,'sw_orient')">Front racked</button>
+          <button class="tog-btn" onclick="tog(this,'sw_orient')">Backwards racked</button>
+        </div></div>
       </div>
     </div>
 
@@ -1093,9 +1089,7 @@ ${row('Count / Stacks',g('sw_count')+' switches / '+g('sw_stacks')+' stacks')}
 ${row('Ports',g('sw_ports')+' total / '+g('sw_inuse')+' in use')}
 ${row('PoE devices',g('sw_poe'))}
 ${row('Uplink',tv('sw_up')+' x'+g('sw_uplinks'))}
-${row('Config backed up',yv('sw_cfg'))}
-${g('sw_serial')?row('Serial #(s)',g('sw_serial')):''}
-${g('sw_cutover')?row('Cutover window',g('sw_cutover')):''}
+${row('Racking orientation',tv('sw_orient'))}
 </table>
 
 ${secHeader(5,'Computers / Servers','sec5')}
