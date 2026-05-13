@@ -407,17 +407,33 @@
       </div>
     </div>
 
-    <!-- SEC 5: END DEVICES -->
+    <!-- SEC 5: SERVERS -->
     <div class="section" id="sec5">
       <div class="sec-head" onclick="toggleSec('sec5')">
         <div class="sec-head-left">
           <div class="sec-num">5</div>
-          <div class="sec-title">End Devices</div>
+          <div class="sec-title">Servers</div>
           <span class="sec-badge pending" id="badge5">—</span>
         </div>
         <span class="chevron" id="chev5">▼</span>
       </div>
       <div class="sec-body" id="body5">
+        <div id="serverList" style="margin-bottom:10px"></div>
+        <button onclick="addServer()" style="width:100%;padding:10px;background:transparent;border:1px dashed var(--border2);border-radius:var(--radius-sm);font-size:13px;font-weight:600;color:var(--accent);cursor:pointer;font-family:inherit;margin-top:2px">+ Add Server</button>
+      </div>
+    </div>
+
+    <!-- SEC 6: END DEVICES -->
+    <div class="section" id="sec6">
+      <div class="sec-head" onclick="toggleSec('sec6')">
+        <div class="sec-head-left">
+          <div class="sec-num">6</div>
+          <div class="sec-title">End Devices</div>
+          <span class="sec-badge pending" id="badge6">—</span>
+        </div>
+        <span class="chevron" id="chev6">▼</span>
+      </div>
+      <div class="sec-body" id="body6">
 
         <!-- Computers -->
         <div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.8px;margin:12px 0 8px">Computers</div>
@@ -838,6 +854,82 @@ function getAllRackLayouts() {
   return result;
 }
 
+
+// ---- SERVER TABLE ----
+let serverRows = [];
+
+function addServer() {
+  const idx = serverRows.length;
+  serverRows.push({ name:'', role:'', type:'', uplinkSpeed:'', uplinkConn:'', mount:'', notes:'' });
+  renderServers();
+  // Scroll new row into view
+  setTimeout(() => {
+    const rows = document.querySelectorAll('.server-row');
+    if (rows.length) rows[rows.length-1].scrollIntoView({ behavior:'smooth', block:'nearest' });
+  }, 50);
+}
+
+function removeServer(idx) {
+  serverRows.splice(idx, 1);
+  renderServers();
+}
+
+function renderServers() {
+  const list = document.getElementById('serverList');
+  if (!list) return;
+  list.innerHTML = '';
+  if (!serverRows.length) return;
+  serverRows.forEach((srv, idx) => {
+    const card = document.createElement('div');
+    card.className = 'server-row';
+    card.style.cssText = 'background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;margin-bottom:8px';
+    card.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <span style="font-size:12px;font-weight:700;color:var(--accent)">Server ${idx+1}</span>
+        <button onclick="removeServer(${idx})" style="background:transparent;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:0 4px;line-height:1">×</button>
+      </div>
+      <div class="row2" style="margin-bottom:8px">
+        <div class="field"><label>Name / Label</label>
+          <input type="text" placeholder="e.g. SRV-DC01" value="${srv.name}"
+            oninput="serverRows[${idx}].name=this.value"
+            style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit">
+        </div>
+        <div class="field"><label>Role</label>
+          <input type="text" placeholder="e.g. Domain Controller" value="${srv.role}"
+            oninput="serverRows[${idx}].role=this.value"
+            style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit">
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:8px"><label>Type</label>
+        <input type="text" placeholder="e.g. HyperV, VM, Phone Server, Access Control..." value="${srv.type}"
+          oninput="serverRows[${idx}].type=this.value"
+          style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit">
+      </div>
+      <div class="row2" style="margin-bottom:8px">
+        <div class="field"><label>Uplink speed</label>
+          <div class="btn-group" style="flex-wrap:wrap">
+            ${['1G','10G','25G','40G'].map(s=>`<button class="tog-btn${srv.uplinkSpeed===s?' on':''}" onclick="serverRows[${idx}].uplinkSpeed='${s}';renderServers()">${s}</button>`).join('')}
+          </div>
+        </div>
+        <div class="field"><label>Connector</label>
+          <div class="btn-group">
+            ${['RJ45','SFP','SFP+'].map(c=>`<button class="tog-btn${srv.uplinkConn===c?' on':''}" onclick="serverRows[${idx}].uplinkConn='${c}';renderServers()">${c}</button>`).join('')}
+          </div>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:8px"><label>Mount type</label>
+        <div class="btn-group">
+          ${['2-Post','4-Post','Tower'].map(m=>`<button class="tog-btn${srv.mount===m?' on':''}" onclick="serverRows[${idx}].mount='${m}';renderServers()">${m}</button>`).join('')}
+        </div>
+      </div>
+      <div class="field"><label>Notes</label>
+        <textarea placeholder="Any additional notes..." oninput="serverRows[${idx}].notes=this.value"
+          style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit;resize:vertical;min-height:48px">${srv.notes}</textarea>
+      </div>`;
+    list.appendChild(card);
+  });
+}
+
 function setSec(secId, val, btn) {
   state.statuses[secId] = val;
   const num = secId.replace('sec','');
@@ -861,8 +953,8 @@ function setOverall(btn, val) {
 
 function updateProgress() {
   const done = Object.keys(state.statuses).length;
-  document.getElementById('topbarSub').textContent = done + ' / 5 sections complete';
-  document.getElementById('progressFill').style.width = Math.round(done/5*100) + '%';
+  document.getElementById('topbarSub').textContent = done + ' / 6 sections complete';
+  document.getElementById('progressFill').style.width = Math.round(done/6*100) + '%';
 }
 
 function g(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
@@ -1000,7 +1092,21 @@ ${row('Uplink',tv('sw_up')+' x'+g('sw_uplinks'))}
 ${row('Racking orientation',tv('sw_orient'))}
 </table>
 
-${secHeader(5,'End Devices','sec5')}
+${secHeader(5,'Servers','sec5')}
+${(()=>{
+  if (!serverRows.length) return '<p style="font-size:13px;color:#999;padding:4px 0">No servers logged.</p>';
+  return serverRows.map((s,i) => `
+<h3 style="font-size:13px;font-weight:600;margin:10px 0 4px">Server ${i+1}${s.name?' — '+s.name:''}</h3>
+<table style="border-collapse:collapse;width:100%;margin-bottom:8px">
+${s.role?`<tr><td style="padding:5px 12px;color:#666;font-size:13px;width:160px">Role</td><td style="padding:5px 12px;font-size:13px">${s.role}</td></tr>`:''}
+${s.type?`<tr><td style="padding:5px 12px;color:#666;font-size:13px">Type</td><td style="padding:5px 12px;font-size:13px">${s.type}</td></tr>`:''}
+${(s.uplinkSpeed||s.uplinkConn)?`<tr><td style="padding:5px 12px;color:#666;font-size:13px">Uplink</td><td style="padding:5px 12px;font-size:13px">${[s.uplinkSpeed,s.uplinkConn].filter(Boolean).join(' ')}</td></tr>`:''}
+${s.mount?`<tr><td style="padding:5px 12px;color:#666;font-size:13px">Mount</td><td style="padding:5px 12px;font-size:13px">${s.mount}</td></tr>`:''}
+${s.notes?`<tr><td style="padding:5px 12px;color:#666;font-size:13px">Notes</td><td style="padding:5px 12px;font-size:13px">${s.notes}</td></tr>`:''}
+</table>\`).join('');
+})()}
+
+${secHeader(6,'End Devices','sec6')}
 <h3 style="font-size:12px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:0.5px;margin:10px 0 4px">Computers</h3>
 <table style="border-collapse:collapse;width:100%">
 ${row('OS mix',tv('pc_os'))}
