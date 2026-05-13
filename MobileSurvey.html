@@ -822,7 +822,7 @@ function buildRackPanels(val) {
   wrap.innerHTML = '';
   if (!count || count < 1 || count > 20) return;
   for (let r = 1; r <= count; r++) {
-    if (!rackData[r]) rackData[r] = { u: '', rows: {} };
+    if (!rackData[r]) rackData[r] = { u: '', rows: {}, type: '' };
     const panel = document.createElement('div');
     panel.style.cssText = 'background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;margin-bottom:10px';
     // Rack title + U input
@@ -838,6 +838,24 @@ function buildRackPanels(val) {
           style="width:56px;background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:5px 7px;font-size:13px;color:var(--text);text-align:center">
       </div>`;
     panel.appendChild(header);
+    // Rack type toggle
+    const typeRow = document.createElement('div');
+    typeRow.style.cssText = 'display:flex;gap:6px;margin-bottom:10px';
+    ['2-Post','4-Post','Wall Mount'].forEach(label => {
+      const btn = document.createElement('button');
+      btn.textContent = label;
+      btn.dataset.rackType = label;
+      btn.dataset.rackNum = r;
+      const isActive = rackData[r].type === label;
+      btn.style.cssText = `flex:1;padding:6px 4px;font-size:11px;font-weight:600;border-radius:var(--radius-sm);border:1px solid ${isActive ? 'rgba(79,142,247,0.4)' : 'var(--border2)'};background:${isActive ? 'rgba(79,142,247,0.15)' : 'var(--surface)'};color:${isActive ? 'var(--accent)' : 'var(--muted)'};cursor:pointer;font-family:inherit`;
+      btn.onclick = function() {
+        rackData[r].type = rackData[r].type === label ? '' : label;
+        // Refresh panel to update button states
+        buildRackPanels(document.getElementById('c_rackcount').value);
+      };
+      typeRow.appendChild(btn);
+    });
+    panel.appendChild(typeRow);
     // Table container
     const tableWrap = document.createElement('div');
     tableWrap.id = 'rackTable_' + r;
@@ -931,7 +949,7 @@ function getAllRackLayouts() {
       const note = (rd.rows || {})[i] || '';
       if (note) rows.push({ u: i, note });
     }
-    result.push({ rack: r, u: rd.u || '—', rows });
+    result.push({ rack: r, u: rd.u || '—', type: rd.type || '—', rows });
   }
   return result;
 }
@@ -1069,7 +1087,7 @@ ${(()=>{
     const tableRows = rack.rows.length
       ? rack.rows.map(r => `<tr><td style="padding:5px 10px;font-size:12px;border:1px solid #ddd;color:#666;width:60px">U${r.u}</td><td style="padding:5px 10px;font-size:12px;border:1px solid #ddd">${r.note}</td></tr>`).join('')
       : '<tr><td colspan="2" style="padding:5px 10px;font-size:12px;border:1px solid #ddd;color:#999">No devices logged</td></tr>';
-    return `<h3 style="font-size:13px;font-weight:600;margin:14px 0 6px;color:#333">Rack ${rack.rack} <span style="font-weight:400;color:#666">(${rack.u}U)</span></h3>
+    return `<h3 style="font-size:13px;font-weight:600;margin:14px 0 6px;color:#333">Rack ${rack.rack} <span style="font-weight:400;color:#666">(${rack.u}U${rack.type !== '—' ? ' — ' + rack.type : ''})</span></h3>
 <table style="border-collapse:collapse;width:100%;border:1px solid #ddd">
 <tr style="background:#f5f5f5"><th style="padding:5px 10px;font-size:12px;text-align:left;border:1px solid #ddd;width:60px">U</th><th style="padding:5px 10px;font-size:12px;text-align:left;border:1px solid #ddd">Device / Notes</th></tr>
 ${tableRows}
