@@ -325,12 +325,6 @@
           <button class="tog-btn" onclick="tog(this,'c_access')">Escort</button>
           <button class="tog-btn" onclick="tog(this,'c_access')">Open</button>
         </div></div>
-        <div class="field"><label>Airflow</label><div class="btn-group" id="grp_c_air">
-          <button class="tog-btn" onclick="tog(this,'c_air')">Front→Back</button>
-          <button class="tog-btn" onclick="tog(this,'c_air')">Back→Front</button>
-          <button class="tog-btn" onclick="tog(this,'c_air')">Open frame</button>
-          <button class="tog-btn" onclick="tog(this,'c_air')">Unknown</button>
-        </div></div>
         <div class="field"><label>Notes</label><textarea id="c_notes" placeholder="Cabinet notes..."></textarea></div>
         <div class="status-strip">
           <button class="st-btn" onclick="setSec('sec2','READY',this)">Ready</button>
@@ -366,24 +360,10 @@
           <button class="tog-btn" onclick="tog(this,'f_type')">MM</button>
           <button class="tog-btn" onclick="tog(this,'f_type')">Both</button>
         </div></div>
-        <div class="row2">
-          <div class="field"><label>Run length (ft)</label><input type="number" id="f_len" placeholder="ft"></div>
-          <div class="field"><label>Spare strands</label><input type="number" id="f_spare" placeholder="count"></div>
-        </div>
-        <div class="field"><label>Spare strands for new uplinks</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'f_uplink','Y')">Y</button><button class="yn-btn" onclick="yn(this,'f_uplink','N')">N</button></div></div>
-        <div class="field"><label>Cat6/Cat6A patch stock</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'f_cat6','Y')">Y</button><button class="yn-btn" onclick="yn(this,'f_cat6','N')">N</button></div></div>
-        <div class="field"><label>Cable plant condition</label><div class="btn-group" id="grp_f_cond">
-          <button class="tog-btn" onclick="tog(this,'f_cond')">Good</button>
-          <button class="tog-btn" onclick="tog(this,'f_cond')">Minor issues</button>
-          <button class="tog-btn" onclick="tog(this,'f_cond')">Needs remediation</button>
-        </div></div>
-        <div class="field"><label>Photos taken</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'f_photos','Y')">Y</button><button class="yn-btn" onclick="yn(this,'f_photos','N')">N</button></div></div>
+        <div class="field"><label>New fiber patch cable length (m)</label><input type="number" id="f_len" placeholder="meters"></div>
+        <div class="field"><label>SFPs needed</label><textarea id="f_sfp" placeholder="e.g. 2x 10G SR, 4x 1G LX..."></textarea></div>
+        <div class="field"><label>Cable management needed</label><textarea id="f_cablemgmt" placeholder="e.g. Horizontal managers, velcro, conduit..."></textarea></div>
         <div class="field"><label>Notes</label><textarea id="f_notes" placeholder="Fiber notes..."></textarea></div>
-        <div class="status-strip">
-          <button class="st-btn" onclick="setSec('sec3','READY',this)">Ready</button>
-          <button class="st-btn" onclick="setSec('sec3','BLOCKERS',this)">Blockers</button>
-          <button class="st-btn" onclick="setSec('sec3','NOT READY',this)">Not ready</button>
-        </div>
       </div>
     </div>
 
@@ -1077,7 +1057,6 @@ ${row('Room temp',g('c_temp')+'°F')}
 ${row('Room for parallel install',yv('c_4u'))}
 ${row('Cabinet locked',yv('c_lock'))}
 ${row('Room access',tv('c_access'))}
-${row('Airflow',tv('c_air'))}
 ${g('c_notes')?row('Notes',g('c_notes')):''}
 </table>
 ${(()=>{
@@ -1101,12 +1080,9 @@ ${row('Fiber panel',yv('f_panel'))}
 ${row('Connector type',tv('f_conn'))}
 ${row('Strands',g('f_total')+' total / '+g('f_avail')+' available')}
 ${row('Fiber type',tv('f_type'))}
-${row('Run length',g('f_len')+' ft')}
-${row('Spare strands',g('f_spare'))}
-${row('Spare for uplinks',yv('f_uplink'))}
-${row('Cat6 stock',yv('f_cat6'))}
-${row('Cable plant condition',tv('f_cond'))}
-${row('Photos taken',yv('f_photos'))}
+${row('New fiber patch cable length',g('f_len')+' m')}
+${g('f_sfp')?row('SFPs needed',g('f_sfp')):''}
+${g('f_cablemgmt')?row('Cable management needed',g('f_cablemgmt')):''}
 ${g('f_notes')?row('Notes',g('f_notes')):''}
 </table>
 
