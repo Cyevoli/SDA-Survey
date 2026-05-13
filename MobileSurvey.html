@@ -313,19 +313,10 @@
       </div>
       <div class="sec-body" id="body2">
         <div class="row2" style="margin-top:10px">
-          <div class="field"><label>Rack height (U)</label><input type="number" id="c_u" placeholder="U" oninput="buildRackTable(this.value)"></div>
+          <div class="field"><label>Number of racks</label><input type="number" id="c_rackcount" placeholder="e.g. 2" min="1" max="20" oninput="buildRackPanels(this.value)"></div>
           <div class="field"><label>Room temp (°F)</label><input type="number" id="c_temp" placeholder="°F"></div>
         </div>
-        <div id="rackTableWrap" style="display:none;margin-bottom:10px">
-          <label style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Rack layout (top → bottom)</label>
-          <div style="border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden">
-            <div style="display:grid;grid-template-columns:48px 1fr;background:var(--surface2);border-bottom:1px solid var(--border)">
-              <div style="padding:6px 8px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">U</div>
-              <div style="padding:6px 8px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;border-left:1px solid var(--border)">Device / Notes</div>
-            </div>
-            <div id="rackTableRows"></div>
-          </div>
-        </div>
+        <div id="rackPanelsWrap"></div>
         <div class="field"><label>Room for parallel install</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'c_4u','Y')">Y</button><button class="yn-btn" onclick="yn(this,'c_4u','N')">N</button></div></div>
         <div class="field"><label>Cabinet locked</label><div class="btn-group"><button class="yn-btn" onclick="yn(this,'c_lock','Y')">Y</button><button class="yn-btn" onclick="yn(this,'c_lock','N')">N</button></div></div>
         <div class="field"><label>Room access</label><div class="btn-group" id="grp_c_access">
@@ -822,41 +813,126 @@ function tog(btn, key) {
   if (idx >= 0) state.tog[key].splice(idx,1); else state.tog[key].push(txt);
 }
 
-function buildRackTable(val) {
-  const u = parseInt(val, 10);
-  const wrap = document.getElementById('rackTableWrap');
-  const rows = document.getElementById('rackTableRows');
-  if (!u || u < 1 || u > 100) { wrap.style.display = 'none'; rows.innerHTML = ''; return; }
-  wrap.style.display = 'block';
-  // Preserve any existing values keyed by U number
-  const existing = {};
-  rows.querySelectorAll('[data-u]').forEach(inp => { existing[inp.dataset.u] = inp.value; });
-  rows.innerHTML = '';
-  for (let i = u; i >= 1; i--) {
-    const row = document.createElement('div');
-    row.style.cssText = 'display:grid;grid-template-columns:48px 1fr;border-top:1px solid var(--border)';
-    const uCell = document.createElement('div');
-    uCell.style.cssText = 'padding:5px 8px;font-size:12px;font-weight:600;color:var(--muted);display:flex;align-items:center;background:var(--surface2)';
-    uCell.textContent = 'U' + i;
-    const noteCell = document.createElement('div');
-    noteCell.style.cssText = 'border-left:1px solid var(--border)';
-    const inp = document.createElement('input');
-    inp.type = 'text';
-    inp.dataset.u = i;
-    inp.placeholder = 'e.g. Cisco 3850, patch panel, cable mgmt, free…';
-    inp.value = existing[i] || '';
-    inp.style.cssText = 'width:100%;background:transparent;border:none;padding:5px 8px;font-size:13px;color:var(--text);font-family:inherit;outline:none';
-    noteCell.appendChild(inp);
-    row.appendChild(uCell);
-    row.appendChild(noteCell);
-    rows.appendChild(row);
+// Multi-rack state: { rackIndex: { u: N, rows: { uPos: 'note' } } }
+const rackData = {};
+
+function buildRackPanels(val) {
+  const count = parseInt(val, 10);
+  const wrap = document.getElementById('rackPanelsWrap');
+  wrap.innerHTML = '';
+  if (!count || count < 1 || count > 20) return;
+  for (let r = 1; r <= count; r++) {
+    if (!rackData[r]) rackData[r] = { u: '', rows: {} };
+    const panel = document.createElement('div');
+    panel.style.cssText = 'background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;margin-bottom:10px';
+    // Rack title + U input
+    const header = document.createElement('div');
+    header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:8px';
+    header.innerHTML = `<span style="font-size:13px;font-weight:700;color:var(--accent)">Rack ${r}</span>
+      <div style="display:flex;align-items:center;gap:6px">
+        <label style="font-size:11px;color:var(--muted)">Height (U)</label>
+        <input type="number" min="1" max="100" placeholder="U"
+          value="${rackData[r].u || ''}"
+          data-rack="${r}"
+          oninput="buildRackTable(this, ${r})"
+          style="width:56px;background:var(--surface);border:1px solid var(--border2);border-radius:6px;padding:5px 7px;font-size:13px;color:var(--text);text-align:center">
+      </div>`;
+    panel.appendChild(header);
+    // Table container
+    const tableWrap = document.createElement('div');
+    tableWrap.id = 'rackTable_' + r;
+    panel.appendChild(tableWrap);
+    wrap.appendChild(panel);
+    // If we already have a U value, rebuild the table
+    if (rackData[r].u) buildRackTable({ value: rackData[r].u, dataset: { rack: r } }, r);
   }
 }
 
-function getRackLayout() {
-  const rows = document.querySelectorAll('#rackTableRows [data-u]');
+function buildRackTable(inp, rackNum) {
+  const u = parseInt(inp.value, 10);
+  rackData[rackNum] = rackData[rackNum] || { u: '', rows: {} };
+  rackData[rackNum].u = inp.value;
+  const wrap = document.getElementById('rackTable_' + rackNum);
+  if (!wrap) return;
+  if (!u || u < 1 || u > 100) { wrap.innerHTML = ''; return; }
+  // Preserve existing row values
+  wrap.querySelectorAll('[data-u]').forEach(i => { rackData[rackNum].rows[i.dataset.u] = i.value; });
+  wrap.innerHTML = '';
+  const table = document.createElement('div');
+  table.style.cssText = 'border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden';
+  // Header
+  const hdr = document.createElement('div');
+  hdr.style.cssText = 'display:grid;grid-template-columns:48px 1fr;background:var(--surface);border-bottom:1px solid var(--border)';
+  hdr.innerHTML = `<div style="padding:5px 8px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">U</div>
+    <div style="padding:5px 8px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;border-left:1px solid var(--border)">Device / Notes</div>`;
+  table.appendChild(hdr);
+  for (let i = u; i >= 1; i--) {
+    const rowVal = rackData[rackNum].rows[i] || '';
+    const row = document.createElement('div');
+    row.style.cssText = 'display:grid;grid-template-columns:48px 1fr;border-top:1px solid var(--border)' + (rowVal ? '' : ';display:none');
+    row.dataset.emptyRow = rowVal ? 'no' : 'yes';
+    const uCell = document.createElement('div');
+    uCell.style.cssText = 'padding:5px 8px;font-size:12px;font-weight:600;color:var(--muted);display:flex;align-items:center;background:var(--surface)';
+    uCell.textContent = 'U' + i;
+    const noteCell = document.createElement('div');
+    noteCell.style.cssText = 'border-left:1px solid var(--border)';
+    const rowInp = document.createElement('input');
+    rowInp.type = 'text';
+    rowInp.dataset.u = i;
+    rowInp.dataset.rack = rackNum;
+    rowInp.placeholder = 'U' + i + ' — device, cable mgmt, free…';
+    rowInp.value = rowVal;
+    rowInp.style.cssText = 'width:100%;background:transparent;border:none;padding:5px 8px;font-size:13px;color:var(--text);font-family:inherit;outline:none';
+    rowInp.oninput = function() {
+      rackData[rackNum].rows[i] = this.value;
+      // Show/hide row based on content
+      const hasVal = this.value.trim().length > 0;
+      row.style.display = hasVal ? 'grid' : 'none';
+      row.dataset.emptyRow = hasVal ? 'no' : 'yes';
+      // Keep focused row visible while typing
+      row.style.display = 'grid';
+    };
+    rowInp.onblur = function() {
+      if (!this.value.trim()) {
+        row.style.display = 'none';
+        row.dataset.emptyRow = 'yes';
+      }
+    };
+    rowInp.onfocus = function() {
+      row.style.display = 'grid';
+    };
+    noteCell.appendChild(rowInp);
+    row.appendChild(uCell);
+    row.appendChild(noteCell);
+    table.appendChild(row);
+  }
+  // "Show all rows" toggle
+  const toggle = document.createElement('button');
+  toggle.textContent = 'Show all rows';
+  toggle.style.cssText = 'width:100%;margin-top:6px;padding:6px;background:transparent;border:1px dashed var(--border2);border-radius:var(--radius-sm);font-size:12px;color:var(--muted);cursor:pointer;font-family:inherit';
+  let showing = false;
+  toggle.onclick = () => {
+    showing = !showing;
+    table.querySelectorAll('[data-empty-row="yes"]').forEach(r => r.style.display = showing ? 'grid' : 'none');
+    toggle.textContent = showing ? 'Hide empty rows' : 'Show all rows';
+  };
+  wrap.appendChild(table);
+  wrap.appendChild(toggle);
+}
+
+function getAllRackLayouts() {
+  const count = parseInt(document.getElementById('c_rackcount')?.value || '0', 10);
   const result = [];
-  rows.forEach(inp => { result.push({ u: inp.dataset.u, note: inp.value.trim() }); });
+  for (let r = 1; r <= count; r++) {
+    const rd = rackData[r] || {};
+    const u = parseInt(rd.u || '0', 10);
+    const rows = [];
+    for (let i = u; i >= 1; i--) {
+      const note = (rd.rows || {})[i] || '';
+      if (note) rows.push({ u: i, note });
+    }
+    result.push({ rack: r, u: rd.u || '—', rows });
+  }
   return result;
 }
 
@@ -978,7 +1054,7 @@ ${g('p_notes')?row('Notes',g('p_notes')):''}
 
 ${secHeader(2,'Cabinet / Rack','sec2')}
 <table style="border-collapse:collapse;width:100%">
-${row('Rack height',g('c_u')+' U')}
+${row('Racks',g('c_rackcount'))}
 ${row('Room temp',g('c_temp')+'°F')}
 ${row('Room for parallel install',yv('c_4u'))}
 ${row('Cabinet locked',yv('c_lock'))}
@@ -986,7 +1062,20 @@ ${row('Room access',tv('c_access'))}
 ${row('Airflow',tv('c_air'))}
 ${g('c_notes')?row('Notes',g('c_notes')):''}
 </table>
-${(()=>{const rl=getRackLayout();if(!rl.length)return'';return'<h3 style="font-size:13px;font-weight:600;margin:12px 0 6px">Rack Layout</h3><table style="border-collapse:collapse;width:100%;border:1px solid #ddd"><tr style="background:#f5f5f5"><th style="padding:5px 10px;font-size:12px;text-align:left;border:1px solid #ddd;width:60px">U</th><th style="padding:5px 10px;font-size:12px;text-align:left;border:1px solid #ddd">Device / Notes</th></tr>'+rl.map(r=>`<tr><td style="padding:5px 10px;font-size:12px;border:1px solid #ddd;color:#666">U${r.u}</td><td style="padding:5px 10px;font-size:12px;border:1px solid #ddd">${r.note||'—'}</td></tr>`).join('')+'</table>';})()}
+${(()=>{
+  const racks = getAllRackLayouts();
+  if (!racks.length) return '';
+  return racks.map(rack => {
+    const tableRows = rack.rows.length
+      ? rack.rows.map(r => `<tr><td style="padding:5px 10px;font-size:12px;border:1px solid #ddd;color:#666;width:60px">U${r.u}</td><td style="padding:5px 10px;font-size:12px;border:1px solid #ddd">${r.note}</td></tr>`).join('')
+      : '<tr><td colspan="2" style="padding:5px 10px;font-size:12px;border:1px solid #ddd;color:#999">No devices logged</td></tr>';
+    return `<h3 style="font-size:13px;font-weight:600;margin:14px 0 6px;color:#333">Rack ${rack.rack} <span style="font-weight:400;color:#666">(${rack.u}U)</span></h3>
+<table style="border-collapse:collapse;width:100%;border:1px solid #ddd">
+<tr style="background:#f5f5f5"><th style="padding:5px 10px;font-size:12px;text-align:left;border:1px solid #ddd;width:60px">U</th><th style="padding:5px 10px;font-size:12px;text-align:left;border:1px solid #ddd">Device / Notes</th></tr>
+${tableRows}
+</table>`;
+  }).join('');
+})()}
 
 ${secHeader(3,'Fiber & Cabling','sec3')}
 <table style="border-collapse:collapse;width:100%">
