@@ -404,6 +404,9 @@
           <button class="tog-btn" onclick="tog(this,'sw_orient')">Front racked</button>
           <button class="tog-btn" onclick="tog(this,'sw_orient')">Backwards racked</button>
         </div></div>
+        <div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.8px;margin:14px 0 8px">Downstream Switches</div>
+        <div id="downstreamList" style="margin-bottom:8px"></div>
+        <button onclick="addDownstream()" style="width:100%;padding:10px;background:transparent;border:1px dashed var(--border2);border-radius:var(--radius-sm);font-size:13px;font-weight:600;color:var(--accent);cursor:pointer;font-family:inherit">+ Add Downstream Switch</button>
       </div>
     </div>
 
@@ -855,6 +858,56 @@ function getAllRackLayouts() {
 }
 
 
+
+// ---- DOWNSTREAM SWITCHES ----
+let downstreamRows = [];
+
+function addDownstream() {
+  downstreamRows.push({ location:'', cableType:'', uplinkCount:'' });
+  renderDownstream();
+  setTimeout(() => {
+    const rows = document.querySelectorAll('.downstream-row');
+    if (rows.length) rows[rows.length-1].scrollIntoView({ behavior:'smooth', block:'nearest' });
+  }, 50);
+}
+
+function removeDownstream(idx) {
+  downstreamRows.splice(idx, 1);
+  renderDownstream();
+}
+
+function renderDownstream() {
+  const list = document.getElementById('downstreamList');
+  if (!list) return;
+  list.innerHTML = '';
+  downstreamRows.forEach((sw, idx) => {
+    const card = document.createElement('div');
+    card.className = 'downstream-row';
+    card.style.cssText = 'background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;margin-bottom:8px';
+    card.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <span style="font-size:12px;font-weight:700;color:var(--accent)">Switch ${idx+1}</span>
+        <button onclick="removeDownstream(${idx})" style="background:transparent;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:0 4px;line-height:1">×</button>
+      </div>
+      <div class="field" style="margin-bottom:8px"><label>Location</label>
+        <input type="text" placeholder="e.g. IDF-02, Server Room, Floor 2" value="${sw.location}"
+          oninput="downstreamRows[${idx}].location=this.value"
+          style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit">
+      </div>
+      <div class="field" style="margin-bottom:8px"><label>Fiber / Cable type</label>
+        <div class="btn-group">
+          ${['Multimode','Single Mode','Copper'].map(t => `<button class="tog-btn${sw.cableType===t?' on':''}" onclick="downstreamRows[${idx}].cableType='${t}';renderDownstream()">${t}</button>`).join('')}
+        </div>
+      </div>
+      <div class="field"><label>Uplink count</label>
+        <input type="number" placeholder="count" value="${sw.uplinkCount}"
+          oninput="downstreamRows[${idx}].uplinkCount=this.value"
+          style="width:80px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;font-size:13px;color:var(--text);font-family:inherit">
+      </div>`;
+    list.appendChild(card);
+  });
+}
+
 // ---- SERVER TABLE ----
 let serverRows = [];
 
@@ -1091,6 +1144,12 @@ ${row('PoE devices',g('sw_poe'))}
 ${row('Uplink',tv('sw_up')+' x'+g('sw_uplinks'))}
 ${row('Racking orientation',tv('sw_orient'))}
 </table>
+${(()=>{
+  if (!downstreamRows.length) return '';
+  return '<h3 style="font-size:13px;font-weight:600;margin:12px 0 6px">Downstream Switches</h3><table style="border-collapse:collapse;width:100%;border:1px solid #ddd"><tr style="background:#f5f5f5"><th style="padding:5px 10px;font-size:12px;text-align:left;border:1px solid #ddd">#</th><th style="padding:5px 10px;font-size:12px;text-align:left;border:1px solid #ddd">Location</th><th style="padding:5px 10px;font-size:12px;text-align:left;border:1px solid #ddd">Cable Type</th><th style="padding:5px 10px;font-size:12px;text-align:left;border:1px solid #ddd">Uplinks</th></tr>'
+    + downstreamRows.map((s,i) => `<tr><td style="padding:5px 10px;font-size:12px;border:1px solid #ddd;color:#666">${i+1}</td><td style="padding:5px 10px;font-size:12px;border:1px solid #ddd">${s.location||'—'}</td><td style="padding:5px 10px;font-size:12px;border:1px solid #ddd">${s.cableType||'—'}</td><td style="padding:5px 10px;font-size:12px;border:1px solid #ddd">${s.uplinkCount||'—'}</td></tr>`).join('')
+    + '</table>';
+})()}
 
 ${secHeader(5,'Servers','sec5')}
 ${(()=>{
